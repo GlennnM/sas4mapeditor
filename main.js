@@ -101,8 +101,10 @@ class Viewer{
 		ctx.fillStyle='green';
 		mapData.entities.forEach(node=>{
 			const adjusted = this.cameraOffset(node);
-			if(adjusted)
+			if(adjusted){
 				ctx.fillRect(adjusted.x, adjusted.y, 20,20);
+				ctx.fillText(node.id, adjusted.x, adjusted.y);
+			}
 		});
 		ctx.fillStyle='blue';
 		mapData.avatarSpawns.forEach(node=>{
