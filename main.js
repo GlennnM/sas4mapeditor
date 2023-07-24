@@ -96,8 +96,8 @@ class Viewer{
 		if(obj.image){
 			 let bound=bounds[assets[obj.image]]
 			 if(bound){
-				 baseX=bound[0]* this.camera.zoom/2;
-				 baseY=bound[1]* this.camera.zoom/2;
+				 baseX=bound[0]* this.camera.zoom;
+				 baseY=bound[1]* this.camera.zoom;
 			 }
 		}
 		if ((adjustedX + oWidth < baseX && adjustedX> baseX+canvas.width) || (adjustedY + oHeight< baseY && adjustedY > baseY+canvas.height))
@@ -218,7 +218,7 @@ class Viewer{
 					//Sprites can have pivot points other than top left, these are described by bounds in swf but don't get saved on export
 					let bound=bounds[assets[node.image]];
 					if(bound)
-						ctx.translate(bound[0]*this.camera.zoom/2,bound[1]*this.camera.zoom/2);
+						ctx.translate(bound[0]*this.camera.zoom,bound[1]*this.camera.zoom);
 					ctx.scale(node.scaleX*this.camera.zoom,node.scaleY*this.camera.zoom);
 					//if(node.rotation!=0){
 					//ctx.restore();

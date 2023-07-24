@@ -26,8 +26,8 @@ public class BoundsExport {
 							if(name.length<2)
 								continue;
 							var rect=st.getRect();
-							//divide by 10 they are in twips(.1px)
-							map.set(name[1],new JsonArray().add(rect.Xmin/10).add(rect.Ymin/10));
+							//divide by 20 they are in twips(.05px)
+							map.set(name[1],new JsonArray().add(rect.Xmin/20).add(rect.Ymin/20));
 						}
 					}
 				} catch (Exception oie) {}
