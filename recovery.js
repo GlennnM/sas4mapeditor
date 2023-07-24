@@ -1,4 +1,4 @@
-const mapData = {
+var mapData = {
   "id": 1128,
   "tileCount": 175,
   "tiles": [

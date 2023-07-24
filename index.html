@@ -1,13 +1,54 @@
 <html>
 	<head>
+		<input type="file" id="fileElem"  accept="text/*" style="display:none" onchange=""/>
 		<title>
 			NKIA's SAS4 Map Viewer
 		</title>
-		<script src="onslaught.js"></script>
+		<script src="assets_csv.js"></script>
+		<script src="scripts.js"></script>
+		<script src="extra/bounds.js"></script>
+		<script src="ice.js"></script>
 		<script src="main.js"></script>
 	</head>
 	<body>
-		<canvas id="canvas"></canvas>
+		<div id='a' style='font-family:Calibri'>
+			<canvas id="canvas"></canvas>
+			<h1 style='display:inline;position:absolute;top:0px'>
+			<a href="#" onclick="console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
+			<a href="#" onclick="document.getElementById('fileElem').click();">[Upload]</a>
+			<a href="#" 
+			onclick="viewer.camera.x=0;
+				viewer.camera.y=0;
+				viewer.camera.zoom=1;">
+				[0,0]</a>
+			<a href="#" 
+			onclick="viewer.camera.x=mapData.avatarSpawns[0].x;
+				viewer.camera.y=mapData.avatarSpawns[0].y;
+				viewer.camera.zoom=1;">
+				[spawn]</a>
+			<form id="" action="#">
+			layers:
+				<input type='checkbox' id='showTile' checked=''>tile</input>
+				<input type='checkbox' id='showLabel'>label</input>
+				<input type='checkbox' id='showEntity'>entity</input>
+				<input type='checkbox' id='showAI' checked=''>ai</input>
+				<input type='checkbox' id='showCollision' checked=''>collision</input>
+			</form>
+			<br>
+			<a href="#" onclick="viewer.tab='ENTITY';">[Entities]</a>
+			<a href="#" onclick="viewer.tab='NODE';">[Nodes]</a>
+			<a href="#" onclick="viewer.tab='COLLISION';">[Collision]</a>
+			<a href="#" onclick="viewer.tab='AI';">[AI]</a>
+			<a href="#" onclick="viewer.tab='TILE';">[Tiles]</a>
+			<a href="#" onclick="viewer.tab='OTHER';">[Other]</a>
+			<br>
+			Selected entities:</h1>
+			<div style='display:inline;position:absolute;top:270px' id='entities'></div>
+			<!--pre style='display:inline;position:absolute;top:50px'><code id='entities'></pre></code-->
+		</div>
+		
+		
 	</body>
+	
 
 </html>

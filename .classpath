@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="extra"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/avi.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/cmykjpeg.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/ddsreader.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/ffdec_lib.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/flamingo-6.2.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/flashdebugger.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/gif.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/gnujpdf.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/graphs.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jargs.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/JavactiveX.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jl1.0.1.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jlayer-1.0.2.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jna-3.5.1.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jna-platform-3.5.1.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jpacker.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jpproxy.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/jsyntaxpane-0.9.5.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/LZMA.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/minimal-json-0.9.5.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/nellymoser.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/sfntly.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/substance-6.2.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/substance-flamingo-6.2.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/tablelayout.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/tga.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/treetable.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/trident-6.2.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/ttf.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/vlcj-4.7.3.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/FFDec/lib/vlcj-natives-4.7.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
