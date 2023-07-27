@@ -194,6 +194,7 @@ class Viewer{
 			default:alert(this.tab);
 		}
 		Object.keys(this.selected)
+			.filter(x=>x!="dispEntities")
 			.forEach(x=>document.getElementById(x+"Count").innerHTML=this.selected[x].length);
 		if(target && (this.selected.dispEntities!=target)){
 			this.selected.dispEntities=target;
@@ -231,14 +232,10 @@ class Viewer{
 			//the edges dont have id
 			for(var x of e){
 				mapData.nodes=mapData.nodes.filter(a=>a.id!=x);
-				console.log(mapData.edges.length);
 				mapData.edges=mapData.edges.filter(a=>a.a!=x && a.b!=x);
-				console.log(x);
-				console.log(mapData.edges.length);
 				for(var g of mapData.graphs){
 					g.nodes=g.nodes.filter(a=>a!=x);
 					if(g.nodes.length==0){
-						console.log(g);
 						mapData.graphs=mapData.graphs.filter(x=>x.id!=g.id);
 						mapData.physicsEdgeGraphs=mapData.physicsEdgeGraphs.filter(x=>x!=g.id);
 						mapData.aiPathingGraphs=mapData.aiPathingGraphs.filter(x=>x!=g.id);
@@ -264,7 +261,6 @@ class Viewer{
 			for(var x of e){
 				mapData[target]=mapData[target].filter(a=>a.id!=x);
 				this.selected[target]=this.selected[target].filter(a=>a.id!=x);
-				console.log(target);
 			}
 		viewer.destroy();
 		viewer = new Viewer(document.getElementById("canvas"));
