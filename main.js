@@ -1,6 +1,6 @@
 
 let viewer;
-
+var SCALED=false;
 class Viewer{
 	static WIDTH = 1280
 	static HEIGHT = 720;
@@ -33,10 +33,13 @@ class Viewer{
 				end
 			}
 		});
-		mapData.extras.forEach(extra=>{
-			extra.x*=10;
-			extra.y*=10;
-		});
+		if(!SCALED){
+			mapData.extras.forEach(extra=>{
+					extra.x*=10;
+					extra.y*=10;
+			});
+		}
+		SCALED=true;
 		this.extras = mapData.extras;
 		this.physicsEdges = this.physicsEdgeGraphs.map(physicsEdgeGraph=>{
 			let edges=this.edges.filter(edge=>physicsEdgeGraph.includes(edge.start) || physicsEdgeGraph.includes(edge.end));
@@ -284,7 +287,7 @@ class Viewer{
 			case "TILE":target="tiles";break;
 			case "OTHER":
 				for(var x of e){
-					mapData.extras=mapData.extras.filter(a=>a.x!=x.x);
+					mapData.extras=mapData.extras.filter(a=>a.x!=x.x || a.y!=x.y || a.text!=x.text);
 					this.selected.other=this.selected.other.filter(a=>a!=x);
 				}
 				target="edges";break;
