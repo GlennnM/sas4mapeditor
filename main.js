@@ -443,7 +443,7 @@ class Viewer{
 			
 			//return "<pre><code>"+JSON.stringify(this.selected.entities,null,'\t')+"</code></pre>";
 		})();
-		thing.appendChild(del);
+		thing.children[0].appendChild(del);
 		return thing;
 	}
 }
