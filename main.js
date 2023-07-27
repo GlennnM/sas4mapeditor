@@ -125,7 +125,7 @@ class Viewer{
 		}
 	
 		if (this.keys[8] || this.keys[46]) {
-			this.clearAll();
+			this.clearAllTabs();
 		}
 	}
 	canvasPos(e){
@@ -175,6 +175,8 @@ class Viewer{
 			nodes : mapData.nodes.filter(near),
 			other : mapData.extras.filter(near),
 			tiles : mapData.tiles.filter(near),
+			avatarSpawns : mapData.avatarSpawns.filter(near),
+			enemySpawns : mapData.enemySpawns.filter(near),
 			aiEdges : this.aiEdges.flatMap(x=>x).filter(near2),
 			physicsEdges : this.physicsEdges.flatMap(x=>x).filter(near2)
 		}
@@ -193,6 +195,8 @@ class Viewer{
 			//case "ENTITY":target=this.selected.aiEdgeGraph;
 			case "TILE":target=this.selected.tiles;break;
 			case "OTHER":target=this.selected.other;break;
+			case "AVATAR":target=this.selected.avatarSpawns;break;
+			case "ENEMY":target=this.selected.enemySpawns;break;
 			default:alert(this.tab);
 		}
 		return target;
@@ -229,6 +233,14 @@ class Viewer{
 	keyup(e) {
 		this.keys[e.keyCode] = false;
 	}
+	clearAllTabs(){
+		let tmp=this.tab;
+		for(var x of ["ENTITY","NODE","COLLISION","AI","TILE","OTHER","AVATAR","ENEMY"]){
+			this.tab=x;
+			this.clearAll();
+		}	
+		this.tab=tmp;	
+	}
 	clearAll(){
 		this.deleteThing(...this.getTarget());
 	}
@@ -238,6 +250,8 @@ class Viewer{
 		let target;
 		switch(this.tab){
 			case "ENTITY":target="entities";break;
+			case "AVATAR":target="avatarSpawns";break;
+			case "ENEMY":target="enemySpawns";break;
 			case "NODE":
 			target="nodes";
 			//the edges dont have id
@@ -268,7 +282,12 @@ class Viewer{
 			break;
 			
 			case "TILE":target="tiles";break;
-			case "OTHER":target="other";break;
+			case "OTHER":
+				for(var x of e){
+					mapData.extras=mapData.extras.filter(a=>a.x!=x.x);
+					this.selected.other=this.selected.other.filter(a=>a!=x);
+				}
+				target="edges";break;
 		}
 		if(target!="edges")
 			for(var x of e){
