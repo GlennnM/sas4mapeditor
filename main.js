@@ -230,15 +230,17 @@ class Viewer{
 			//the edges dont have id
 			for(var x of e){
 				mapData.nodes=mapData.nodes.filter(a=>a.id!=x);
-				for(var y of mapData.edges){
-					if(y.start==x || y.end==x)
-						mapData.edges.splice(x);
-				}
+				console.log(mapData.edges.length);
+				mapData.edges=mapData.edges.filter(a=>a.a!=x && a.b!=x);
+				console.log(x);
+				console.log(mapData.edges.length);
 				for(var g of mapData.graphs){
-					if(g.nodes.filter(a=>a!=x).length==0){
-						mapData.graphs.splice(g);
-						mapData.physicsEdgeGraphs.splice(g.id);
-						mapData.aiPathingGraphs.splice(g.id);
+					g.nodes=g.nodes.filter(a=>a!=x);
+					if(g.nodes.length==0){
+						console.log(g);
+						mapData.graphs=mapData.graphs.filter(x=>x.id!=g.id);
+						mapData.physicsEdgeGraphs=mapData.physicsEdgeGraphs.filter(x=>x!=g.id);
+						mapData.aiPathingGraphs=mapData.aiPathingGraphs.filter(x=>x!=g.id);
 					}
 				}
 			}
@@ -246,7 +248,7 @@ class Viewer{
 			case "COLLISION":
 			case "AI":
 			for(var x of e){
-				mapData.edges.splice(x);
+				mapData.edges=mapData.edges.filter(a=>a.a.id!=x.start.id || a.b.id!=x.end.id);
 			}
 			target="edges";
 			break;
@@ -264,8 +266,8 @@ class Viewer{
 		viewer = new Viewer(document.getElementById("canvas"));
 		viewer.camera=this.camera;
 		viewer.selected=this.selected;
-		viewer.refreshSelection();
 		viewer.tab=this.tab;
+		viewer.refreshSelection();
 		}catch(e){console.dir(e)};
 	}
 	
