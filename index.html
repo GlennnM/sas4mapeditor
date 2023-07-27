@@ -14,7 +14,7 @@
 		<div id='a' style='font-family:Calibri'>
 			<canvas id="canvas"></canvas>
 			<h1 style='display:inline;position:absolute;top:0px'>
-			<a href="#" onclick="console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
+			<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
 			<a href="#" onclick="document.getElementById('fileElem').click();">[Upload]</a>
 			<a href="#" 
 			onclick="viewer.camera.x=0;
@@ -35,6 +35,7 @@
 				<input type='checkbox' id='showCollision' checked=''>collision</input>
 			</form>
 			<br>
+			Current tab: <a id="tabDisplay">ENTITY</a><br>
 			<a href="#" onclick="viewer.tab='ENTITY';">[Entities]</a>
 			<a href="#" onclick="viewer.tab='NODE';">[Nodes]</a>
 			<a href="#" onclick="viewer.tab='COLLISION';">[Collision]</a>

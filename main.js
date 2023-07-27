@@ -138,6 +138,17 @@ class Viewer{
 	static btwn(i, bound1,bound2, r){
 		return bound1>bound2? (i < bound1-r && i > bound2+r):(i > bound1-r && i < bound2+r);
 	}
+	/**
+     * @param {string} newTab
+     */
+	set tab(newTab){
+		this.tab_=newTab;
+		document.getElementById("tabDisplay").innerText=newTab;
+		this.refreshSelection();
+	}
+	get tab(){
+		return this.tab_;
+	}
 	nodeNearby(pos,node){
 		if(!node)return;
 		const adj=this.cameraOffset(node);
@@ -165,6 +176,33 @@ class Viewer{
 			physicsEdges : this.physicsEdges.flatMap(x=>x).filter(near2)
 		}
 		this.sel=null;
+		
+		//display the selected stuff TODO
+		this.refreshSelection();
+	}
+	refreshSelection(){
+		if(!this.selected)return;
+		var target;
+		switch(this.tab){
+			case "ENTITY":target=this.selected.entities;break;
+			case "NODE":target=this.selected.nodes;break;
+			case "COLLISION":target=this.selected.physicsEdges;break;
+			case "AI":target=this.selected.aiEdges;break;
+			//case "ENTITY":target=this.selected.aiEdgeGraph;
+			case "TILE":target=this.selected.tiles;break;
+			case "OTHER":target=this.selected.other;break;
+			default:alert(this.tab);
+		}
+		
+		if(target && (this.selected.dispEntities!=target)){
+			this.selected.dispEntities=target;
+			let ent=document.getElementById("entities");
+			ent.innerHTML="";
+			target.map(this.wrapEntity.bind(this))
+				.forEach(x=>ent.appendChild(x));
+			if(target.length>0)
+				ent.children[0].setAttribute('open','');
+		}
 	}
 	mousemove(e){
 		this.mouse=this.canvasPos(e);
@@ -182,6 +220,55 @@ class Viewer{
 	keyup(e) {
 		this.keys[e.keyCode] = false;
 	}
+	deleteThing(...e){
+		try{
+		let target;
+		switch(this.tab){
+			case "ENTITY":target="entities";break;
+			case "NODE":
+			target="nodes";
+			//the edges dont have id
+			for(var x of e){
+				mapData.nodes=mapData.nodes.filter(a=>a.id!=x);
+				for(var y of mapData.edges){
+					if(y.start==x || y.end==x)
+						mapData.edges.splice(x);
+				}
+				for(var g of mapData.graphs){
+					if(g.nodes.filter(a=>a!=x).length==0){
+						mapData.graphs.splice(g);
+						mapData.physicsEdgeGraphs.splice(g.id);
+						mapData.aiPathingGraphs.splice(g.id);
+					}
+				}
+			}
+			break;
+			case "COLLISION":
+			case "AI":
+			for(var x of e){
+				mapData.edges.splice(x);
+			}
+			target="edges";
+			break;
+			
+			case "TILE":target="tiles";break;
+			case "OTHER":target="other";break;
+		}
+		if(target!="edges")
+			for(var x of e){
+				mapData[target]=mapData[target].filter(a=>a.id!=x);
+				this.selected[target]=this.selected[target].filter(a=>a.id!=x);
+				console.log(target);
+			}
+		viewer.destroy();
+		viewer = new Viewer(document.getElementById("canvas"));
+		viewer.camera=this.camera;
+		viewer.selected=this.selected;
+		viewer.refreshSelection();
+		viewer.tab=this.tab;
+		}catch(e){console.dir(e)};
+	}
+	
 	render(){
 		const canvas = this.canvas;
 		const ctx = this.ctx;
@@ -307,44 +394,49 @@ class Viewer{
 			this.ctx.fillStyle = '#40408020';
 			this.ctx.fillRect(this.sel.x,this.sel.y,pos.x-this.sel.x,pos.y-this.sel.y, canvas.height);
 		}
-		//display the selected stuff TODO
-		var target;
-		switch(this.tab){
-			case "ENTITY":target=this.selected.entities;break;
-			case "NODE":target=this.selected.nodes;break;
-			case "COLLISION":target=this.selected.physicsEdges;break;
-			case "AI":target=this.selected.aiEdges;break;
-			//case "ENTITY":target=this.selected.aiEdgeGraph;
-			case "TILE":target=this.selected.tiles;break;
-			case "OTHER":target=this.selected.other;break;
-		}
-		
-		if(target && (this.selected.dispEntities!=target)){
-			this.selected.dispEntities=target;
-			const wrapped=target.map(this.wrapEntity.bind(this)).join('');
-			document.getElementById("entities").innerHTML=this.tab+wrapped;
-			if(wrapped.length>0)
-				document.getElementById("entities").children[0].setAttribute('open','');
-		}
+	}
+	fixLengths(){
+		mapData.tileCount=mapData.tiles.length;
+		mapData.nodeCount=mapData.nodes.length;
+		mapData.edgeCount=mapData.edges.length;
+		mapData.graphCount=mapData.graphs.length;
+		mapData.physicsCount=mapData.physicsEdgeGraphs.length;
+		mapData.aiCount=mapData.aiPathingGraphs.length;
+		mapData.avatarSpawnCount=mapData.avatarSpawns.length;
+		mapData.aiCount=mapData.aiPathingGraphs.length;
+		mapData.enemySpawnCount=mapData.enemySpawns.length;
+		mapData.extraCount=mapData.extras.length;
+		mapData.entityCount=mapData.entities.length;
+		mapData.extraCount=mapData.extras.length;
+		mapData.thingCount=mapData.things.length;
 	}
 	wrapEntity(e){
-		if(!e.x && e.x!=0){
+		let e_=e;
+		let del=document.createElement("a");
+		del.href='#';
+		del.innerHTML="[DELETE]";
+		del.onclick=()=>this.deleteThing(e_.id || e_);
+		let thing=document.createElement("details");
+		thing.innerHTML=(()=>{
+			if(!e.x && e.x!=0){
+				
 			
-		
-	return `<details><summary style='cursor:pointer'><u>${this.tab.toLowerCase()} - ${e.start.id}(${e.start.x}, ${e.start.y}) ->${e.end.id}(${e.end.x}, ${e.end.y}) - Graph #${e.graph}</u></summary>${JSON.stringify(e)}</details>`;
-		}
-		var script=e.script||e.text;
-		if(script || this.tab=="TILE"){
-			//this is dumb
-			script=script?(this.tab=="OTHER"?{name:script}:scripts[script]):{name:assets[e.image]};
-			if(script)
-				return `<details><summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id}(${script.name})(${e.x}, ${e.y})</u></summary>
-						<pre>${JSON.stringify(e,null,'\t')}</pre>${JSON.stringify(script)} 
-					</details>`;
-		}
-	return `<details><summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id} - (${e.x}, ${e.y}) </u></summary></details>`;
-		
-		//return "<pre><code>"+JSON.stringify(this.selected.entities,null,'\t')+"</code></pre>";
+			return `<summary style='cursor:pointer'><u>${this.tab.toLowerCase()} - ${e.start.id}(${e.start.x}, ${e.start.y}) ->${e.end.id}(${e.end.x}, ${e.end.y}) - Graph #${e.graph}</u></summary>${JSON.stringify(e)}`;
+			}
+			var script=e.script||e.text;
+			if(script || this.tab=="TILE"){
+				//this is dumb
+				script=script?(this.tab=="OTHER"?{name:script}:scripts[script]):{name:assets[e.image]};
+				if(script)
+					return `<summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id}(${script.name})(${e.x}, ${e.y})</u></summary>
+							<pre>${JSON.stringify(e,null,'\t')}</pre>${JSON.stringify(script)}`;
+			}
+			return `<summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id} - (${e.x}, ${e.y}) </u></summary>`;
+			
+			//return "<pre><code>"+JSON.stringify(this.selected.entities,null,'\t')+"</code></pre>";
+		})();
+		thing.appendChild(del);
+		return thing;
 	}
 }
 const fe=document.getElementById("fileElem");
@@ -355,8 +447,11 @@ fe.onchange=()=>{
 			if(file.name.endsWith('.js')){
 				const end=f.lastIndexOf(';');
 				mapData=JSON.parse(f.substring(f.indexOf('=')+1,(end<0?f.length:end)));
-			}else 
+			}else {
 				mapData=JSON.parse(f);
+				if(mapData instanceof Array)
+					mapData=mapData[0];
+			}
 			viewer.destroy();
 			viewer = new Viewer(document.getElementById('canvas'));
 		});
