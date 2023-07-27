@@ -26,6 +26,9 @@
 				viewer.camera.y=mapData.avatarSpawns[0].y;
 				viewer.camera.zoom=1;">
 				[spawn]</a>
+			<a href="#" 
+			onclick="viewer.clearAll()">
+				[Clear Selected]</a>
 			<form id="" action="#">
 			layers:
 				<input type='checkbox' id='showTile' checked=''>tile</input>
@@ -44,7 +47,7 @@
 			<a href="#" onclick="viewer.tab='OTHER';">[Other - <b id="otherCount">0</b>]</a>
 			<br>
 			Selected entities:</h1>
-			<div style='display:inline;position:absolute;top:270px' id='entities'></div>
+			<div style='display:inline;position:absolute;top:320px' id='entities'></div>
 			<!--pre style='display:inline;position:absolute;top:50px'><code id='entities'></pre></code-->
 		</div>
 		

@@ -123,7 +123,10 @@ class Viewer{
 		if (this.keys[this.settings.INTERACT_KEY]) {
 			this.doInteract();
 		}
-
+	
+		if (this.keys[8] || this.keys[46]) {
+			this.clearAll();
+		}
 	}
 	canvasPos(e){
 		const rect = canvas.getBoundingClientRect();
@@ -180,9 +183,8 @@ class Viewer{
 		//display the selected stuff TODO
 		this.refreshSelection();
 	}
-	refreshSelection(){
-		if(!this.selected)return;
-		var target;
+	getTarget(){
+		let target;
 		switch(this.tab){
 			case "ENTITY":target=this.selected.entities;break;
 			case "NODE":target=this.selected.nodes;break;
@@ -193,6 +195,11 @@ class Viewer{
 			case "OTHER":target=this.selected.other;break;
 			default:alert(this.tab);
 		}
+		return target;
+	}
+	refreshSelection(){
+		if(!this.selected)return;
+		let target=this.getTarget();
 		Object.keys(this.selected)
 			.filter(x=>x!="dispEntities")
 			.forEach(x=>document.getElementById(x+"Count").innerHTML=this.selected[x].length);
@@ -222,7 +229,11 @@ class Viewer{
 	keyup(e) {
 		this.keys[e.keyCode] = false;
 	}
+	clearAll(){
+		this.deleteThing(...this.getTarget());
+	}
 	deleteThing(...e){
+		
 		try{
 		let target;
 		switch(this.tab){
@@ -231,6 +242,7 @@ class Viewer{
 			target="nodes";
 			//the edges dont have id
 			for(var x of e){
+				x=x.id||x;
 				mapData.nodes=mapData.nodes.filter(a=>a.id!=x);
 				mapData.edges=mapData.edges.filter(a=>a.a!=x && a.b!=x);
 				for(var g of mapData.graphs){
@@ -246,6 +258,7 @@ class Viewer{
 			case "COLLISION":
 			case "AI":
 			for(var x of e){
+				x=x.id||x;
 				mapData.edges=mapData.edges.filter(a=>a.a!=x.start.id || a.b!=x.end.id);
 				this.selected.aiEdges=this.selected.aiEdges.filter(a=>a!=x);
 				this.selected.physicsEdges=this.selected.physicsEdges.filter(a=>a!=x);
@@ -259,6 +272,7 @@ class Viewer{
 		}
 		if(target!="edges")
 			for(var x of e){
+				x=x.id||x;
 				mapData[target]=mapData[target].filter(a=>a.id!=x);
 				this.selected[target]=this.selected[target].filter(a=>a.id!=x);
 			}
@@ -419,7 +433,7 @@ class Viewer{
 		let del=document.createElement("a");
 		del.href='#';
 		del.innerHTML="[DELETE]";
-		del.onclick=()=>this.deleteThing(e_.id || e_);
+		del.onclick=()=>this.deleteThing(e_);
 		let thing=document.createElement("details");
 		thing.innerHTML=(()=>{
 			if(!e.x && e.x!=0){
