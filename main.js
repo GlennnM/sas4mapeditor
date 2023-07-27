@@ -248,7 +248,10 @@ class Viewer{
 			case "COLLISION":
 			case "AI":
 			for(var x of e){
-				mapData.edges=mapData.edges.filter(a=>a.a.id!=x.start.id || a.b.id!=x.end.id);
+				mapData.edges=mapData.edges.filter(a=>a.a!=x.start.id || a.b!=x.end.id);
+				this.selected.aiEdges=this.selected.aiEdges.filter(a=>a!=x);
+				this.selected.physicsEdges=this.selected.physicsEdges.filter(a=>a!=x);
+				
 			}
 			target="edges";
 			break;
@@ -361,9 +364,13 @@ class Viewer{
 		ctx.fillStyle='black';
 		ctx.strokeStyle='black';
 		ctx.lineWidth = 5;
+		mapData.nodes.forEach(node=>{
+			let off=this.cameraOffset(node);
+			ctx.fillText(node.id,off.x,off.y)
+		});
 		if(document.getElementById("showCollision").checked)
 			this.physicsEdges.forEach((physicsEdges)=>{
-				physicsEdges.forEach((edge,i)=>{
+				physicsEdges.forEach((edge)=>{
 					const adjustedStart = this.cameraOffset(edge.start);
 					const adjustedEnd = this.cameraOffset(edge.end);
 					if(adjustedStart && adjustedEnd){
@@ -371,7 +378,6 @@ class Viewer{
 						ctx.moveTo(adjustedStart.x, adjustedStart.y);
 						ctx.lineTo(adjustedEnd.x, adjustedEnd.y);
 						ctx.stroke();
-						ctx.fillText(i,adjustedStart.x, adjustedStart.y);
 					}
 				});
 			});
@@ -379,7 +385,7 @@ class Viewer{
 		ctx.strokeStyle='red';
 		ctx.lineWidth = 1;
 		if(document.getElementById("showAI").checked)
-			this.aiEdges.flatMap(x=>x).forEach((edge,i)=>{
+			this.aiEdges.flatMap(x=>x).forEach((edge)=>{
 				const adjustedStart = this.cameraOffset(edge.start);
 				const adjustedEnd = this.cameraOffset(edge.end);
 				if(adjustedStart && adjustedEnd){
@@ -387,7 +393,6 @@ class Viewer{
 					ctx.moveTo(adjustedStart.x, adjustedStart.y);
 					ctx.lineTo(adjustedEnd.x, adjustedEnd.y);
 					ctx.stroke();
-					ctx.fillText(i,adjustedStart.x, adjustedStart.y);
 				}
 			});
 		
