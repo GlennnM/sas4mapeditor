@@ -193,7 +193,8 @@ class Viewer{
 			case "OTHER":target=this.selected.other;break;
 			default:alert(this.tab);
 		}
-		
+		Object.keys(this.selected)
+			.forEach(x=>document.getElementById(x+"Count").innerHTML=this.selected[x].length);
 		if(target && (this.selected.dispEntities!=target)){
 			this.selected.dispEntities=target;
 			let ent=document.getElementById("entities");
