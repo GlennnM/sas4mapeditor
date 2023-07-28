@@ -9,49 +9,81 @@
 		<script src="extra/bounds.js"></script>
 		<script src="ice.js"></script>
 		<script src="main.js"></script>
+		<style>
+			#overlay{
+			    position   : absolute;
+			    top        : 0;
+			    left       : 0;
+			    width      : 100%;
+			    height     : 100%;
+			    background : #000;
+			    opacity    : 0.6;
+			    filter     : alpha(opacity=60);
+			    z-index    : 5
+			}
+			#popup{
+				position:absolute;
+				top:50%;
+				left:50%;
+				width:854px;  
+				height:480px;  
+			    background : white;
+			    opacity    : 1;
+				margin-left:-477px; 
+				margin-top:-240px;
+			    z-index    : 10
+			}
+		</style>
 	</head>
-	<body>
-		<div id='a' style='font-family:Calibri'>
-			<canvas id="canvas"></canvas>
-			<h1 style='display:inline;position:absolute;top:0px'>
-			<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
-			<a href="#" onclick="document.getElementById('fileElem').click();">[Upload]</a>
-			<a href="#" 
-			onclick="viewer.camera.x=0;
-				viewer.camera.y=0;
-				viewer.camera.zoom=1;">
-				[0,0]</a>
-			<a href="#" 
-			onclick="viewer.camera.x=mapData.avatarSpawns[0].x;
-				viewer.camera.y=mapData.avatarSpawns[0].y;
-				viewer.camera.zoom=1;">
-				[spawn]</a>
-			<a href="#" 
-			onclick="viewer.clearAll()">
-				[Clear Selected]</a>
-			<form id="" action="#">
-			layers:
-				<input type='checkbox' id='showTile' checked=''>tile</input>
-				<input type='checkbox' id='showLabel'>label</input>
-				<input type='checkbox' id='showEntity'>entity</input>
-				<input type='checkbox' id='showAI' checked=''>ai</input>
-				<input type='checkbox' id='showCollision' checked=''>collision</input>
-			</form>
-			<br>
-			Current tab: <a id="tabDisplay">ENTITY</a><br>
-			<a href="#" onclick="viewer.tab='ENTITY';">[Entities - <b id="entitiesCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='NODE';">[Nodes - <b id="nodesCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='COLLISION';">[Collision - <b id="physicsEdgesCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='AI';">[AI - <b id="aiEdgesCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='TILE';">[Tiles - <b id="tilesCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='AVATAR';">[Spawns - <b id="avatarSpawnsCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='ENEMY';">[E spawns - <b id="enemySpawnsCount">0</b>]</a>
-			<a href="#" onclick="viewer.tab='OTHER';">[Other - <b id="otherCount">0</b>]</a>
-			<br>
-			Selected entities:</h1>
-			<div style='display:inline;position:absolute;top:320px' id='entities'></div>
-			<!--pre style='display:inline;position:absolute;top:50px'><code id='entities'></pre></code-->
+	<body style='font-family:Calibri,Arial'>
+		<div id="overlay" hidden=1></div>
+		<div id="popup" hidden=1>
+			<h1>Edit <a id="editTextName">thing</a>:
+				<a href='#' onclick="viewer.editTextDiscard()" style="float:right;padding-left:10px">[Discard]</a>
+				<a href='#' onclick="viewer.editTextSave()" style="float:right">[Save]</a>	
+			</h1>
+			<textarea id="editTextArea" style="width:100%;height:100%;font-size:32"></textarea>
 		</div>
+		<canvas id="canvas"></canvas>
+		<h1 style='display:inline;position:absolute;top:0px'>
+		<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
+		<a href="#" onclick="document.getElementById('fileElem').click();">[Upload]</a>
+		<a href="#" 
+		onclick="viewer.camera.x=0;
+			viewer.camera.y=0;
+			viewer.camera.zoom=1;">
+			[0,0]</a>
+		<a href="#" 
+		onclick="viewer.camera.x=mapData.avatarSpawns[0].x;
+			viewer.camera.y=mapData.avatarSpawns[0].y;
+			viewer.camera.zoom=1;">
+			[spawn]</a>
+		<a href="#" 
+		onclick="viewer.clearAll()">
+			[Clear Selected]</a>
+		<form id="" action="#">
+		layers:
+			<input type='checkbox' id='showTile' checked=''>tile</input>
+			<input type='checkbox' id='showLabel'>label</input>
+			<input type='checkbox' id='showEntity'>entity</input>
+			<input type='checkbox' id='showAI' checked=''>ai</input>
+			<input type='checkbox' id='showCollision' checked=''>collision</input>
+		</form>
+		<br>
+		Current tab: <a id="tabDisplay">ENTITY</a><br>
+		<a href="#" onclick="viewer.tab='ENTITY';">[Entities - <b id="entitiesCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='NODE';">[Nodes - <b id="nodesCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='COLLISION';">[Collision - <b id="physicsEdgesCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='AI';">[AI - <b id="aiEdgesCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='TILE';">[Tiles - <b id="tilesCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='AVATAR';">[Spawns - <b id="avatarSpawnsCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='ENEMY';">[E spawns - <b id="enemySpawnsCount">0</b>]</a>
+		<a href="#" onclick="viewer.tab='OTHER';">[Other - <b id="otherCount">0</b>]</a>
+		<br>
+		Selected entities:</h1>
+		<div style='display:inline;position:absolute;top:320px' id='entities'></div>
+		<!--pre style='display:inline;position:absolute;top:50px'><code id='entities'></pre></code-->
+
 		
 		
 	</body>
