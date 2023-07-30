@@ -204,13 +204,13 @@ class Viewer{
 		}
 		return target;
 	}
-	refreshSelection(){
+	refreshSelection(force=false){
 		if(!this.selected)return;
 		let target=this.getTarget();
 		Object.keys(this.selected)
 			.filter(x=>x!="dispEntities")
 			.forEach(x=>document.getElementById(x+"Count").innerHTML=this.selected[x].length);
-		if(target && (this.selected.dispEntities!=target)){
+		if(target && (this.selected.dispEntities!=target || force)){
 			this.selected.dispEntities=target;
 			let ent=document.getElementById("entities");
 			ent.innerHTML="";
@@ -263,6 +263,7 @@ class Viewer{
 		document.getElementById("popup").hidden=1;
 	}
 	editThing(e){
+		//todo - clearly didnt link back to mapdata
 		this.editingThing=e;
 		this.editingIndex=this.getTarget().findIndex(x=>(x.id && x.id==e.id)||x==e);//text sadf
 		
@@ -333,7 +334,7 @@ class Viewer{
 		viewer.camera=this.camera;
 		viewer.selected=this.selected;
 		viewer.tab=this.tab;
-		viewer.refreshSelection();
+		viewer.refreshSelection(true);
 	}
 	render(){
 		const canvas = this.canvas;
