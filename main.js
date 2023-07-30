@@ -247,6 +247,31 @@ class Viewer{
 	clearAll(){
 		this.deleteThing(...this.getTarget());
 	}
+	editTextSave(){
+		Object.assign(
+			this.getTarget()[this.editingIndex],
+			JSON.parse(document.getElementById("editTextArea").value)
+		);
+		
+		this.editTextDiscard();
+		this.recreate();
+	}
+	editTextDiscard(){
+		this.editingThing=null;
+		this.editingIndex=-1;
+		document.getElementById("overlay").hidden=1;
+		document.getElementById("popup").hidden=1;
+	}
+	editThing(e){
+		this.editingThing=e;
+		this.editingIndex=this.getTarget().findIndex(x=>(x.id && x.id==e.id)||x==e);//text sadf
+		
+		let json=this.getTarget()[this.editingIndex];
+		document.getElementById("overlay").hidden=null;
+		document.getElementById("popup").hidden=null;
+		document.getElementById("editTextArea").value=JSON.stringify(json,null,2);
+		
+	}
 	deleteThing(...e){
 		
 		try{
@@ -298,15 +323,18 @@ class Viewer{
 				mapData[target]=mapData[target].filter(a=>a.id!=x);
 				this.selected[target]=this.selected[target].filter(a=>a.id!=x);
 			}
-		viewer.destroy();
+		}catch(e){console.dir(e)};
+		this.recreate();
+	}
+	recreate(){
+		
+		this.destroy();
 		viewer = new Viewer(document.getElementById("canvas"));
 		viewer.camera=this.camera;
 		viewer.selected=this.selected;
 		viewer.tab=this.tab;
 		viewer.refreshSelection();
-		}catch(e){console.dir(e)};
 	}
-	
 	render(){
 		const canvas = this.canvas;
 		const ctx = this.ctx;
@@ -454,8 +482,14 @@ class Viewer{
 		let e_=e;
 		let del=document.createElement("a");
 		del.href='#';
-		del.innerHTML="[DELETE]";
+		del.innerText="[DELETE]";
 		del.onclick=()=>this.deleteThing(e_);
+		
+		let edit=document.createElement("a");
+		edit.href='#';
+		edit.innerText="[EDIT]";
+		edit.onclick=()=>this.editThing(e_);
+		
 		let thing=document.createElement("details");
 		thing.innerHTML=(()=>{
 			if(!e.x && e.x!=0){
@@ -475,6 +509,7 @@ class Viewer{
 			
 			//return "<pre><code>"+JSON.stringify(this.selected.entities,null,'\t')+"</code></pre>";
 		})();
+		thing.children[0].appendChild(edit);
 		thing.children[0].appendChild(del);
 		return thing;
 	}
