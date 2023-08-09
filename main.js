@@ -510,7 +510,9 @@ class Viewer{
 			
 			//return "<pre><code>"+JSON.stringify(this.selected.entities,null,'\t')+"</code></pre>";
 		})();
-		thing.children[0].appendChild(edit);
+		if(this.tab!="COLLISION" && this.tab!="AI"){
+			thing.children[0].appendChild(edit);
+		}
 		thing.children[0].appendChild(del);
 		return thing;
 	}
