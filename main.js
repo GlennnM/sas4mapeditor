@@ -25,6 +25,13 @@ class Viewer{
 		this.aiEdgeGraphs =  mapData.aiPathingGraphs.map(graphId=>{
 			return mapData.graphs.find(graph=>graph.id===graphId).nodes.map(id=>mapData.nodes.find(node=>id===node.id)).map(x=>{Object.assign(x,{graphId:graphId});return x;});
 		});
+		this.otherGraphs = mapData.graphs
+		.map(x=>x.id)
+		.filter(x=>!mapData.aiPathingGraphs.includes(x))
+		.filter(x=>!mapData.physicsEdgeGraphs.includes(x))
+		.map(graphId=>{
+			return mapData.graphs.find(graph=>graph.id===graphId).nodes.map(id=>mapData.nodes.find(node=>id===node.id)).map(x=>{Object.assign(x,{graphId:graphId});return x;});
+		});
 		this.edges = mapData.edges.map(edge=>{
 			const start = mapData.nodes.find(node=>node.id === edge.a);
 			const end = mapData.nodes.find(node=>node.id === edge.b);
@@ -47,6 +54,11 @@ class Viewer{
 			return edges;
 		});
 		this.aiEdges = this.aiEdgeGraphs.map(aiEdgeGraph=>{
+			let edges= this.edges.filter(edge=>aiEdgeGraph.includes(edge.start) || aiEdgeGraph.includes(edge.end))
+			edges.forEach(edge=>edge.graph=edge.start.graphId);
+			return edges;
+		});
+		this.otherEdges = this.otherGraphs.map(aiEdgeGraph=>{
 			let edges= this.edges.filter(edge=>aiEdgeGraph.includes(edge.start) || aiEdgeGraph.includes(edge.end))
 			edges.forEach(edge=>edge.graph=edge.start.graphId);
 			return edges;
@@ -371,9 +383,12 @@ class Viewer{
 						ctx.rotate(node.rotation*Math.PI/180);
 					//Sprites can have pivot points other than top left, these are described by bounds in swf but don't get saved on export
 					let bound=bounds[assets[node.image]];
+					ctx.scale(this.camera.zoom,this.camera.zoom);
+					ctx.scale(node.scaleX,node.scaleY);
 					if(bound)
-						ctx.translate(bound[0]*this.camera.zoom,bound[1]*this.camera.zoom);
-					ctx.scale(node.scaleX*this.camera.zoom,node.scaleY*this.camera.zoom);
+						ctx.translate(bound[0],bound[1]);
+					
+					//ctx.scale(node.scaleX,node.scaleY);
 					//if(node.rotation!=0){
 					//ctx.restore();
 					//	return;
@@ -457,7 +472,25 @@ class Viewer{
 					ctx.stroke();
 				}
 			});
+		const randomColor=(seed)=>
+			"#"+(Object(seed*(9999999)%128)).toString(16).padStart(2,0)
+			+(64+Object(seed*(999999)%192)).toString(16).padStart(2,0)
+				+(Object(seed*(99999)%256)).toString(16).padStart(2,0);
 		
+		if(document.getElementById("showAI").checked)
+			this.otherEdges.flatMap(x=>x).forEach((edge)=>{
+				ctx.strokeStyle=randomColor(edge.start.graphId);
+				ctx.lineWidth = 2;
+				
+				const adjustedStart = this.cameraOffset(edge.start);
+				const adjustedEnd = this.cameraOffset(edge.end);
+				if(adjustedStart && adjustedEnd){
+					ctx.beginPath();
+					ctx.moveTo(adjustedStart.x, adjustedStart.y);
+					ctx.lineTo(adjustedEnd.x, adjustedEnd.y);
+					ctx.stroke();
+				}
+			});
 		if(this.sel && this.mouse){
 			const pos=this.mouse;
 			this.ctx.fillStyle = '#40408020';
