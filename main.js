@@ -2,7 +2,7 @@
 let viewer;
 var SCALED=false;
 class Viewer{
-	static WIDTH = 1280
+	static WIDTH = 1280;
 	static HEIGHT = 720;
 	constructor(canvas){
 		this.initCanvas(canvas);
@@ -19,19 +19,27 @@ class Viewer{
 			LEFT_KEY:65,
 			RIGHT_KEY:68
 		}
-		this.physicsEdgeGraphs = mapData.physicsEdgeGraphs.map(graphId=>{
-			return mapData.graphs.find(graph=>graph.id===graphId).nodes.map(id=>mapData.nodes.find(node=>id===node.id)).map(x=>{Object.assign(x,{graphId:graphId});return x;});
-		});
-		this.aiEdgeGraphs =  mapData.aiPathingGraphs.map(graphId=>{
-			return mapData.graphs.find(graph=>graph.id===graphId).nodes.map(id=>mapData.nodes.find(node=>id===node.id)).map(x=>{Object.assign(x,{graphId:graphId});return x;});
-		});
+		const toGraphs=graphId=>{
+			return mapData.graphs
+			.find(graph=>graph.id===graphId)
+			.nodes.map(id=>mapData.nodes.find(node=>id===node.id))
+			.map(x=>{
+				Object.assign(x,{graphId:graphId});
+				return x;
+			});
+		};
+		const toEdges=physicsEdgeGraph=>{
+			let edges=this.edges.filter(edge=>physicsEdgeGraph.includes(edge.start) || physicsEdgeGraph.includes(edge.end));
+			edges.forEach(edge=>edge.graph=edge.start.graphId);
+			return edges;
+		};
+		this.physicsEdgeGraphs = mapData.physicsEdgeGraphs.map(toGraphs);
+		this.aiEdgeGraphs =  mapData.aiPathingGraphs.map(toGraphs);
 		this.otherGraphs = mapData.graphs
-		.map(x=>x.id)
-		.filter(x=>!mapData.aiPathingGraphs.includes(x))
-		.filter(x=>!mapData.physicsEdgeGraphs.includes(x))
-		.map(graphId=>{
-			return mapData.graphs.find(graph=>graph.id===graphId).nodes.map(id=>mapData.nodes.find(node=>id===node.id)).map(x=>{Object.assign(x,{graphId:graphId});return x;});
-		});
+			.map(x=>x.id)
+			.filter(x=>!mapData.aiPathingGraphs.includes(x))
+			.filter(x=>!mapData.physicsEdgeGraphs.includes(x))
+			.map(toGraphs);
 		this.edges = mapData.edges.map(edge=>{
 			const start = mapData.nodes.find(node=>node.id === edge.a);
 			const end = mapData.nodes.find(node=>node.id === edge.b);
@@ -48,21 +56,9 @@ class Viewer{
 		}
 		SCALED=true;
 		this.extras = mapData.extras;
-		this.physicsEdges = this.physicsEdgeGraphs.map(physicsEdgeGraph=>{
-			let edges=this.edges.filter(edge=>physicsEdgeGraph.includes(edge.start) || physicsEdgeGraph.includes(edge.end));
-			edges.forEach(edge=>edge.graph=edge.start.graphId);
-			return edges;
-		});
-		this.aiEdges = this.aiEdgeGraphs.map(aiEdgeGraph=>{
-			let edges= this.edges.filter(edge=>aiEdgeGraph.includes(edge.start) || aiEdgeGraph.includes(edge.end))
-			edges.forEach(edge=>edge.graph=edge.start.graphId);
-			return edges;
-		});
-		this.otherEdges = this.otherGraphs.map(aiEdgeGraph=>{
-			let edges= this.edges.filter(edge=>aiEdgeGraph.includes(edge.start) || aiEdgeGraph.includes(edge.end))
-			edges.forEach(edge=>edge.graph=edge.start.graphId);
-			return edges;
-		});
+		this.physicsEdges = this.physicsEdgeGraphs.map(toEdges);
+		this.aiEdges = this.aiEdgeGraphs.map(toEdges);
+		this.otherEdges = this.otherGraphs.map(toEdges);
 		this.interval = setInterval(()=>{
 			this.update();
 			this.render();
@@ -77,6 +73,7 @@ class Viewer{
 		window.removeEventListener('mouseup',this.mu);
 		this.canvas.removeEventListener('mousedown',this.md);
 		this.canvas.removeEventListener('mousemove',this.mm);
+		this.canvas.removeEventListener('contextmenu',this.c);
 		clearInterval(this.interval);
 	}
 	initCanvas(canvas){
@@ -86,6 +83,7 @@ class Viewer{
 		this.mu=this.mouseup.bind(this);
 		this.md=this.mousedown.bind(this);
 		this.mm=this.mousemove.bind(this);
+		this.c= (e) => { e.preventDefault(); e.stopPropagation(); };
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
 		this.canvas.width = Viewer.WIDTH;
@@ -96,6 +94,7 @@ class Viewer{
 		window.addEventListener('mouseup',this.mu);
 		canvas.addEventListener('mousedown',this.md);
 		canvas.addEventListener('mousemove',this.mm);
+		canvas.addEventListener('contextmenu',this.c);
 	}
 	update(){
 		this.handleInput();
@@ -151,7 +150,10 @@ class Viewer{
 		};
 	}
 	mousedown(e){
-		this.sel=this.canvasPos(e);
+		
+		if(e.button){
+			this.sel=this.canvasPos(e);
+		}else this.keys[0]=1;
 	}
 	static btwn(i, bound1,bound2, r){
 		return bound1>bound2? (i < bound1-r && i > bound2+r):(i > bound1-r && i < bound2+r);
@@ -180,25 +182,30 @@ class Viewer{
 			.some(adj=>Viewer.btwn(adj.x,this.sel.x,pos.x,30) 
 				&& Viewer.btwn(adj.y,this.sel.y,pos.y,30));
 	}
+	
 	mouseup(e){
-		const pos=this.mouse || this.canvasPos(e);
-		if(!this.sel || !pos)return;
-		let near=this.nodeNearby.bind(this,pos);
-		let near2=this.edgeNearby.bind(this,pos);
-		this.selected={
-			entities : mapData.entities.filter(near),
-			nodes : mapData.nodes.filter(near),
-			other : mapData.extras.filter(near),
-			tiles : mapData.tiles.filter(near),
-			avatarSpawns : mapData.avatarSpawns.filter(near),
-			enemySpawns : mapData.enemySpawns.filter(near),
-			aiEdges : this.aiEdges.flatMap(x=>x).filter(near2),
-			physicsEdges : this.physicsEdges.flatMap(x=>x).filter(near2)
-		}
-		this.sel=null;
 		
-		//display the selected stuff TODO
-		this.refreshSelection();
+		if(e.button){
+			const pos=this.mouse || this.canvasPos(e);
+			if(!this.sel || !pos)return;
+			let near=this.nodeNearby.bind(this,pos);
+			let near2=this.edgeNearby.bind(this,pos);
+			this.selected={
+				entities : mapData.entities.filter(near),
+				nodes : mapData.nodes.filter(near),
+				other : mapData.extras.filter(near),
+				tiles : mapData.tiles.filter(near),
+				avatarSpawns : mapData.avatarSpawns.filter(near),
+				enemySpawns : mapData.enemySpawns.filter(near),
+				aiEdges : this.aiEdges.flatMap(x=>x).filter(near2),
+				physicsEdges : this.physicsEdges.flatMap(x=>x).filter(near2)
+			}
+			this.sel=null;
+			
+			//display the selected stuff TODO
+			this.refreshSelection();
+		}
+		else this.keys[0]=0;
 	}
 	getTarget(){
 		let target;
@@ -233,6 +240,10 @@ class Viewer{
 		}
 	}
 	mousemove(e){
+		if(this.keys[0]){
+			this.camera.x-=e.movementX/this.camera.zoom;
+			this.camera.y-=e.movementY/this.camera.zoom;
+		}
 		this.mouse=this.canvasPos(e);
 	}
 	onwheel(e){
@@ -240,6 +251,9 @@ class Viewer{
 			this.camera.zoom*=1.1;
 		}else 
 			this.camera.zoom*=0.9;
+		let sign=(e.deltaY<0)?1:-1;
+		this.camera.x+=sign*(this.mouse.x-this.canvas.width/2)/(8*this.camera.zoom);
+		this.camera.y+=sign*(this.mouse.y-this.canvas.height/2)/(8*this.camera.zoom);
 		e.preventDefault();
 	}
 	keydown(e) {
