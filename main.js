@@ -1,6 +1,9 @@
 
 let viewer;
 var SCALED=false;
+function near(pos1,pos2){
+	return Math.sqrt((pos1.x-pos2.x)**2 + (pos1.y-pos2.y)**2)<10;
+}
 class Viewer{
 	static WIDTH = 1280;
 	static HEIGHT = 720;
@@ -62,7 +65,7 @@ class Viewer{
 		this.interval = setInterval(()=>{
 			this.update();
 			this.render();
-		},1000/20);
+		},1000/30);
 		this.tab="ENTITY";//ENTITY, NODE, EDGE, TILE, OTHER
 		this.selected={};
 	}
@@ -121,6 +124,13 @@ class Viewer{
 			y: adjustedY
 		};
 	}
+	//inverse of cameraOffset
+	mapOffset(obj){
+		return {
+			x:(obj.x-this.canvas.width/2)/this.camera.zoom+(this.camera.x),
+			y:(obj.y-this.canvas.height/2)/this.camera.zoom+(this.camera.y)
+		};
+	}
 	handleInput() {
 		if (this.keys[this.settings.UP_KEY]) {
 			this.camera.y -= this.camera.speed/this.camera.zoom;
@@ -151,6 +161,7 @@ class Viewer{
 	}
 	mousedown(e){
 		
+		this.timeDown=Date.now()
 		if(e.button){
 			this.sel=this.canvasPos(e);
 		}else this.keys[0]=1;
@@ -184,7 +195,8 @@ class Viewer{
 	}
 	
 	mouseup(e){
-		
+		let drag=(Date.now()-(this.timeDown || Infinity)>250) || 
+		(Date.now()-(this.lastMove || Infinity)<20);
 		if(e.button){
 			const pos=this.mouse || this.canvasPos(e);
 			if(!this.sel || !pos)return;
@@ -205,7 +217,62 @@ class Viewer{
 			//display the selected stuff TODO
 			this.refreshSelection();
 		}
-		else this.keys[0]=0;
+		else {
+			this.keys[0]=0;
+			if(this.mouse && this.place && !e.movementX && !e.movementY
+			&& document.activeElement===this.canvas
+			&&!drag
+			){
+				switch(this.place.tab){
+					default:
+						
+						let graph=mapData.graphs
+							.find(x=>x.id==this.place.graphId);
+						let start=mapData.nodes
+							.filter(x=>x.graphId && x.graphId==graph.id)
+							.find(x=>near(this.cameraOffset(x),this.mouse));
+						if(start){
+							if(!this.place.edgeStart){
+								this.place.edgeStart=start;
+								return;
+							}else if(this.place.edgeStart==start){
+								this.place=null;
+								this.recreate();
+								return;
+							}else{
+								mapData.edges.push({
+									a:this.place.edgeStart.id,
+									b:start.id,
+									weight:1
+								});
+								this.place=null;
+								this.recreate();
+								return;
+							}
+						}
+						let adj=this.mapOffset(this.mouse);
+						let node={
+							id:this.newNodeId(),
+							x:adj.x,
+							y:adj.y,
+							graphId:this.place.graphId
+						};
+						mapData.nodes.push(node);
+						graph.nodes.push(node.id);
+						if(this.place.edgeStart){
+							let edge={
+								a:this.place.edgeStart.id,
+								b:node.id,
+								weight:1
+							};
+							mapData.edges.push(edge);
+						}
+						this.place.edgeStart=node;
+						this.recreate();
+						break;
+				}
+			}
+		}
 	}
 	getTarget(){
 		let target;
@@ -240,6 +307,7 @@ class Viewer{
 		}
 	}
 	mousemove(e){
+		this.lastMove=Date.now()
 		if(this.keys[0]){
 			this.camera.x-=e.movementX/this.camera.zoom;
 			this.camera.y-=e.movementY/this.camera.zoom;
@@ -359,6 +427,7 @@ class Viewer{
 		viewer = new Viewer(document.getElementById("canvas"));
 		viewer.camera=this.camera;
 		viewer.selected=this.selected;
+		viewer.place=this.place;
 		viewer.tab=this.tab;
 		viewer.refreshSelection(true);
 	}
@@ -452,13 +521,8 @@ class Viewer{
 					ctx.fillRect(adjusted.x, adjusted.y, 20,20);
 			});
 		}
+		
 		ctx.fillStyle='black';
-		ctx.strokeStyle='black';
-		ctx.lineWidth = 5;
-		mapData.nodes.forEach(node=>{
-			let off=this.cameraOffset(node);
-			ctx.fillText(node.id,off.x,off.y)
-		});
 		if(document.getElementById("showCollision").checked)
 			this.physicsEdges.forEach((physicsEdges)=>{
 				physicsEdges.forEach((edge)=>{
@@ -494,7 +558,9 @@ class Viewer{
 		if(document.getElementById("showAI").checked)
 			this.otherEdges.flatMap(x=>x).forEach((edge)=>{
 				ctx.strokeStyle=randomColor(edge.start.graphId);
-				ctx.lineWidth = 2;
+				if(this.place&&edge.start.graphId!=this.place.graphId)
+					return;
+				ctx.lineWidth = 2+this.place*2;
 				
 				const adjustedStart = this.cameraOffset(edge.start);
 				const adjustedEnd = this.cameraOffset(edge.end);
@@ -505,10 +571,50 @@ class Viewer{
 					ctx.stroke();
 				}
 			});
+			ctx.fillStyle='black';
+		ctx.strokeStyle='black';
+		
+		mapData.nodes.forEach(node=>{
+			let off=this.cameraOffset(node);
+			if(this.place && this.place.graphId==node.graphId){
+				var prev= ctx.font;
+				ctx.font= '20px Arial';
+				ctx.fillStyle=randomColor(node.graphId);
+				ctx.beginPath();
+				ctx.ellipse(off.x,off.y,10,10,0,0,2*Math.PI);
+				ctx.fill();
+				ctx.textAlign='center';
+				ctx.fillStyle='black';
+				ctx.fillText(node.id,off.x,off.y);
+				ctx.textAlign='left';
+				ctx.font=prev;
+				//alert(node.id);
+				//ctx.rect(off.x,off.y,40,40);
+			}else{
+				ctx.fillText(node.id,off.x,off.y);
+			}
+		});
 		if(this.sel && this.mouse){
 			const pos=this.mouse;
 			this.ctx.fillStyle = '#40408020';
 			this.ctx.fillRect(this.sel.x,this.sel.y,pos.x-this.sel.x,pos.y-this.sel.y, canvas.height);
+		}else if(this.place&& this.mouse){
+			
+			switch(this.place.tab){
+				default:
+				ctx.fillStyle=randomColor(this.place.graphId);
+				ctx.beginPath();
+				ctx.ellipse(this.mouse.x,this.mouse.y,10,10,0,0,2*Math.PI);
+				ctx.fill();
+				if(this.place.edgeStart){
+						ctx.beginPath();
+						let adj=this.cameraOffset(this.place.edgeStart);
+						ctx.moveTo(adj.x,adj.y);
+						ctx.lineTo(this.mouse.x,this.mouse.y);
+						ctx.stroke();
+				}
+					break;
+			}
 		}
 	}
 	fixLengths(){
@@ -525,6 +631,98 @@ class Viewer{
 		mapData.entityCount=mapData.entities.length;
 		mapData.extraCount=mapData.extras.length;
 		mapData.thingCount=mapData.things.length;
+	}
+	addEntity(){
+		
+	}
+	addTile(){
+		
+	}
+	addPhysics(){
+		
+		document.getElementById("overlay").hidden=null;
+		document.getElementById("add_collision").hidden=null;
+		//document.getElementById("editTextArea").value=JSON.stringify(json,null,2);
+	}
+	addPhysicsSave(){
+		let mask=
+			!document.getElementById("collide_projectiles").checked * 16
+			| !document.getElementById("collide_enemies").checked * 8
+			| !document.getElementById("collide_players").checked * 4
+			| !document.getElementById("collide_survivors").checked * 2
+			| !document.getElementById("collide_ai").checked * 1;
+		switch(mask){
+			case 0:
+				//collision graph
+				let id=mapData.physicsEdgeGraphs[0];
+				if(!id){
+					id=this.newGraphId();
+					mapData.graphs.push({id:id,nodes:[],nodeCount:0});
+					mapData.physicsEdgeGraphs.push(id);
+					recreate();
+				}
+				this.place={
+					graphId:id
+				}
+				break;
+			case 31:
+				break;
+			default:
+				this.place={
+					graphId:this.findStaticWalls(mask)
+				}
+				//1. find S
+				//2. create ifne
+				//3. set placement-->add that first(nodes are circles, hide others, circle on mouse)
+		}
+		this.addPhysicsDiscard();
+	}
+	addPhysicsDiscard(){
+		document.getElementById("overlay").hidden=1;
+		document.getElementById("add_collision").hidden=1;
+	}
+	addAI(){
+		
+	}
+	findStaticWalls(mask){
+		let id;
+		//todo: parameter processing
+		let wall=mapData.entities
+			.find(x=>x.script==64 &&
+				mask==(x.parameters[2] * 16
+					| x.parameters[3] * 8
+					| x.parameters[4] * 4
+					| x.parameters[5] * 2
+					| x.parameters[6] * 1)
+			)
+		
+		if(wall==null){
+			id=this.newGraphId();
+			wall={
+				id:this.newEntityId(),
+				script:64,
+				parameterSize:7,
+				parameters:[
+					(id>>>8)&0xff,id&0xff,
+					mask&16,mask&8,mask&4,mask&2,mask&1
+				],
+				x:0,
+				y:0
+			};
+			mapData.graphs.push({id:id,nodeCount:0,nodes:[]});
+			mapData.entities.push(wall);
+		}
+		id=((wall.parameters[0]&0xff)<<8)|(wall.parameters[1]&0xff);
+		return id;
+	}
+	newGraphId(){
+		return Math.max(...mapData.graphs.map(x=>x.id))+1;
+	}
+	newEntityId(){
+		return Math.max(...mapData.entities.map(x=>x.id))+1;
+	}
+	newNodeId(){
+		return Math.max(...mapData.nodes.map(x=>x.id))+1;
 	}
 	wrapEntity(e){
 		let e_=e;
