@@ -353,8 +353,7 @@ class Viewer{
 	editTextDiscard(){
 		this.editingThing=null;
 		this.editingIndex=-1;
-		document.getElementById("overlay").hidden=1;
-		document.getElementById("popup").hidden=1;
+		this.hidePopups();
 	}
 	editThing(e){
 		//todo - clearly didnt link back to mapdata
@@ -675,11 +674,11 @@ class Viewer{
 				//2. create ifne
 				//3. set placement-->add that first(nodes are circles, hide others, circle on mouse)
 		}
-		this.addPhysicsDiscard();
+		this.hidePopups();
 	}
-	addPhysicsDiscard(){
+	hidePopups(){
 		document.getElementById("overlay").hidden=1;
-		document.getElementById("add_collision").hidden=1;
+		[...document.getElementsByClassName("popup")].forEach(x=>x.hidden=1);
 	}
 	addOther(){
 		
@@ -692,17 +691,19 @@ class Viewer{
 		let form=document.getElementById("select_graph_form");
 		form.innerHTML="Pick graph...<br>";
 		(other?this.otherGraphs.filter(x=>x[0]).map(x=>x[0].graphId):mapData.aiPathingGraphs)
+			.concat(-1)
 			.forEach(graph=>{
 				var newInput = document.createElement("input");
 				newInput.id="pick_graph_"+graph;
 				newInput.type="radio";
 				newInput.name="select_graph_radio";
 				newInput.dataset.graphid=graph;
+				var label=document.createElement("label");
+				label.htmlFor=newInput.id;
+				label.innerHTML=graph<0?"new...<br>":"Graph #"+graph+"<br>";
 				form.appendChild(newInput);
-				form.innerHTML+="Graph #"+graph+"<br> ";
+				form.appendChild(label);
 			});
-		form.innerHTML+="<input type='radio' data-graphId='-1' name='select_graph_radio'>new...</input><br>";
-		
 	}
 	addAISave(){
 		let res=document.getElementById("select_graph_form")
@@ -723,12 +724,7 @@ class Viewer{
 			graphId:id
 			//tab:
 		};
-		this.addAIDiscard();
-	}
-	addAIDiscard(){
-		
-		document.getElementById("overlay").hidden=1;
-		document.getElementById("select_graph").hidden=1;
+		this.hidePopups();
 	}
 	findStaticWalls(mask){
 		let id;

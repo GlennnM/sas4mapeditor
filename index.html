@@ -49,16 +49,20 @@
 				
 			<form action="#" style='width:100%;height:64%;font-size:32'>
 				Collide with...<br>
-				<input type='checkbox' id='collide_players' checked=''>players</input><br>
-				<input type='checkbox' id='collide_enemies' checked=''>enemies</input><br>
-				<input type='checkbox' id='collide_projectiles' checked=''>projectiles</input><br>
-				
-				<input type='checkbox' id='collide_survivors' checked=''>survivors</input><br>
-				<input type='checkbox' id='collide_ai' checked=''>ai soldiers</input><br>
+				<input type='checkbox' id='collide_players' checked=''></input>
+					<label for='collide_players'>players<br></label>
+				<input type='checkbox' id='collide_enemies' checked=''></input>
+					<label for='collide_enemies'>enemies<br></label>
+				<input type='checkbox' id='collide_projectiles' checked=''></input>
+					<label for='collide_projectiles'>projectiles<br></label>
+				<input type='checkbox' id='collide_survivors' checked=''></input>
+					<label for='collide_survivors'>survivors<br></label>
+				<input type='checkbox' id='collide_ai' checked=''></input>
+					<label for='collide_ai'>ai soldiers<br></label>
 				
 			</form>
 			<a href='#' onclick="viewer.addPhysicsSave()" style="bottom:0">[Confirm]</a>	
-			<a href='#' onclick="viewer.addPhysicsDiscard()" style="bottom:0;padding-left:10px">[Discard]</a>
+			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
 		
 		
 				
@@ -71,7 +75,17 @@
 			</form>
 			
 			<a href='#' onclick="viewer.addAISave()" style="bottom:0">[Confirm]</a>	
-			<a href='#' onclick="viewer.addAIDiscard()" style="bottom:0;padding-left:10px">[Discard]</a>
+			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
+		
+		</div>
+		<div id="select_entity" class="popup" hidden=1 style="font-size:64">
+			<form id="select_graph_form" action="#" style='width:100%;height:64%;font-size:32;overflow-y:scroll'>
+				
+				
+			</form>
+			
+			<a href='#' onclick="viewer.addAISave()" style="bottom:0">[Confirm]</a>	
+			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
 		
 		</div>
 		<canvas id="canvas" tabindex="-1"></canvas>
