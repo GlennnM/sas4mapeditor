@@ -681,8 +681,54 @@ class Viewer{
 		document.getElementById("overlay").hidden=1;
 		document.getElementById("add_collision").hidden=1;
 	}
-	addAI(){
+	addOther(){
 		
+	}
+	addAI(other=false){
+		let sg=document.getElementById("select_graph");
+		document.getElementById("overlay").hidden=null;
+		sg.hidden=null;
+		this.other=other;
+		let form=document.getElementById("select_graph_form");
+		form.innerHTML="Pick graph...<br>";
+		(other?this.otherGraphs.filter(x=>x[0]).map(x=>x[0].graphId):mapData.aiPathingGraphs)
+			.forEach(graph=>{
+				var newInput = document.createElement("input");
+				newInput.id="pick_graph_"+graph;
+				newInput.type="radio";
+				newInput.name="select_graph_radio";
+				newInput.dataset.graphid=graph;
+				form.appendChild(newInput);
+				form.innerHTML+="Graph #"+graph+"<br> ";
+			});
+		form.innerHTML+="<input type='radio' data-graphId='-1' name='select_graph_radio'>new...</input><br>";
+		
+	}
+	addAISave(){
+		let res=document.getElementById("select_graph_form")
+			.querySelector('input:checked');
+		if(!res)return;
+		let id=res.dataset.graphid;
+		if(id==-1){
+			id=this.newGraphId();
+			mapData.graphs.push({id:id,nodes:[],nodeCount:0});
+			if(!this.other)mapData.aiPathingGraphs.push(id);
+			this.place={
+				graphId:id
+			//tab:
+			};
+			this.recreate();
+		}
+		this.place={
+			graphId:id
+			//tab:
+		};
+		this.addAIDiscard();
+	}
+	addAIDiscard(){
+		
+		document.getElementById("overlay").hidden=1;
+		document.getElementById("select_graph").hidden=1;
 	}
 	findStaticWalls(mask){
 		let id;

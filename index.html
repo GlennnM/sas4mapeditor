@@ -64,6 +64,16 @@
 				
 			
 		</div>
+		<div id="select_graph" class="popup" hidden=1 style="font-size:64">
+			<form id="select_graph_form" action="#" style='width:100%;height:64%;font-size:32;overflow-y:scroll'>
+				
+				
+			</form>
+			
+			<a href='#' onclick="viewer.addAISave()" style="bottom:0">[Confirm]</a>	
+			<a href='#' onclick="viewer.addAIDiscard()" style="bottom:0;padding-left:10px">[Discard]</a>
+		
+		</div>
 		<canvas id="canvas" tabindex="-1"></canvas>
 		<h1 style='display:inline;position:absolute;top:0px'>
 		<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
@@ -94,6 +104,9 @@
 		<a href="#" 
 		onclick="viewer.addAI()">
 			[+AI]</a>
+		<a href="#" 
+		onclick="viewer.addAI(true)">
+			[+graph]</a>
 		<form id="" action="#">
 		layers:
 			<input type='checkbox' id='showTile' checked=''>tile</input>
