@@ -4,6 +4,10 @@ var SCALED=false;
 function near(pos1,pos2){
 	return Math.sqrt((pos1.x-pos2.x)**2 + (pos1.y-pos2.y)**2)<10;
 }
+const randomColor=(seed)=>
+	"#"+(Object(seed*(9999999)%128)).toString(16).padStart(2,0)
+	+(64+Object(seed*(999999)%192)).toString(16).padStart(2,0)
+		+(Object(seed*(99999)%256)).toString(16).padStart(2,0);
 class Viewer{
 	static WIDTH = 1280;
 	static HEIGHT = 720;
@@ -68,7 +72,22 @@ class Viewer{
 		},1000/30);
 		this.tab="ENTITY";//ENTITY, NODE, EDGE, TILE, OTHER
 		this.selected={};
+		
+		let input=document.getElementById("select_entity_input");
+		let search=document.getElementById("select_entity_data");
+		search.innerHTML='';
+		for(var id of Object.keys(scripts)){
+			let s=scripts[id];
+			let t=document.createElement("option");
+			t.dataset.id=id;
+			t.innerText=id+" - "+s.name;
+			t.onclick=()=>{
+				
+			}
+			search.appendChild(t);
+		}
 	}
+	
 	destroy(){
 		window.removeEventListener('keydown',this.kd);
 		window.removeEventListener('keyup',this.ku);
@@ -253,8 +272,8 @@ class Viewer{
 						let adj=this.mapOffset(this.mouse);
 						let node={
 							id:this.newNodeId(),
-							x:adj.x,
-							y:adj.y,
+							x:Math.round(adj.x),
+							y:Math.round(adj.y),
 							graphId:this.place.graphId
 						};
 						mapData.nodes.push(node);
@@ -339,7 +358,8 @@ class Viewer{
 		this.tab=tmp;	
 	}
 	clearAll(){
-		this.deleteThing(...this.getTarget());
+		let t=this.getTarget();
+		if(t)this.deleteThing(...t);
 	}
 	editTextSave(){
 		Object.assign(
@@ -549,10 +569,6 @@ class Viewer{
 					ctx.stroke();
 				}
 			});
-		const randomColor=(seed)=>
-			"#"+(Object(seed*(9999999)%128)).toString(16).padStart(2,0)
-			+(64+Object(seed*(999999)%192)).toString(16).padStart(2,0)
-				+(Object(seed*(99999)%256)).toString(16).padStart(2,0);
 		
 		if(document.getElementById("showAI").checked)
 			this.otherEdges.flatMap(x=>x).forEach((edge)=>{
@@ -589,7 +605,7 @@ class Viewer{
 				ctx.font=prev;
 				//alert(node.id);
 				//ctx.rect(off.x,off.y,40,40);
-			}else{
+			}else if(document.getElementById("showLabel").checked){
 				ctx.fillText(node.id,off.x,off.y);
 			}
 		});
@@ -632,7 +648,31 @@ class Viewer{
 		mapData.thingCount=mapData.things.length;
 	}
 	addEntity(){
+		document.getElementById("select_entity_input").value="";
+		document.getElementById("overlay").hidden=null;
+		document.getElementById("select_entity").hidden=null;
 		
+	}
+	addEntityUpdate(){
+		let id=document.getElementById("select_entity_input").value
+			.split(" ")
+			.map(Number)
+			.filter(x=>!isNaN(x))[0];
+		if(id===undefined)return;
+		let menu=document.getElementById("select_entity");
+		menu.querySelector("#parameterHint").children[0].innerText=scripts[id].name;
+		let div=menu.querySelector("#parameterDiv");
+		div.innerHTML='';
+		div.appendChild(paramsHTML(id));
+	}
+	addEntitySave(){
+		let id=document.getElementById("select_entity_input").value
+			.split(" ")
+			.map(Number)
+			.filter(x=>!isNaN(x))[0];
+		if(id===undefined)return;
+		alert(id);
+		this.hidePopups();
 	}
 	addTile(){
 		
@@ -689,6 +729,7 @@ class Viewer{
 		sg.hidden=null;
 		this.other=other;
 		let form=document.getElementById("select_graph_form");
+		//todo: sketch them and maybe show potential entity uses
 		form.innerHTML="Pick graph...<br>";
 		(other?this.otherGraphs.filter(x=>x[0]).map(x=>x[0].graphId):mapData.aiPathingGraphs)
 			.concat(-1)
@@ -699,6 +740,7 @@ class Viewer{
 				newInput.name="select_graph_radio";
 				newInput.dataset.graphid=graph;
 				var label=document.createElement("label");
+				//if(other)label.style.color=randomColor(graph);
 				label.htmlFor=newInput.id;
 				label.innerHTML=graph<0?"new...<br>":"Graph #"+graph+"<br>";
 				form.appendChild(newInput);
