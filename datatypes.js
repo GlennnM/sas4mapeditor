@@ -41,37 +41,121 @@ function arrayToUTF8(f){
 	var len=arrayToShort(f);
 	return String.fromCharCode(...chars.slice(2,len));
 }
-function paramsHTML(script){
+function near(pos1,pos2){
+	return Math.sqrt((pos1.x-pos2.x)**2 + (pos1.y-pos2.y)**2)<10;
+}
+function randomColor(seed){
+	return "#"+(Object(seed*(9999999)%128)).toString(16).padStart(2,0)
+	+(64+Object(seed*(999999)%192)).toString(16).padStart(2,0)
+		+(Object(seed*(99999)%256)).toString(16).padStart(2,0);
+}
+//make a selector for id's from a list
+function list(ids, target, graphOrTile=false, numRecents=0){
+	let html=document.createElement("select");
+	html.style="width:120px";
+	let i=0;
+	for(let id of ids){
+		let op= document.createElement("option");
+		let typeId=graphOrTile?
+			(mapData.physicsEdgeGraphs.includes(id)?
+				"physics":
+				mapData.aiPathingGraphs.includes(id)?
+				"ai":""):
+			
+			mapData.tiles.find(x=>x.id==id).image
+		;
+		op.innerText=
+			((i<numRecents)?"(RECENT) ":" ") +
+			((graphOrTile)?typeId+" graph ":assets[typeId])+": "+id;
+		html.appendChild(op);
+		i++;
+	}
+	html.addEventListener('input',()=>{
+		document.getElementById(target).value=html.value.split(" ").pop()
+	});
+	return html;
+}
+function paramsHTML(script,prev=[]){
 	let html=document.createElement("form");
 	html.action='#';
 	html.dataset.script=script;
 	for(let param of scripts[script].params){
+		let id="param_"+param.id;
+		let input;
 		switch(param.type){
 			case "short":
 				//pick a tile or graph
 				//include recently placed
-				html.innerHTML += "<input placeholder='0-32767' type='number' min='0' max='32767'></input>" + param.name + "<br>";
+				input=document.createElement("input");
+				Object.assign(input,{
+					placeholder:'0-32767',
+					type:'number',
+					min:'0',
+					max:'32767',
+					id:id,
+				});
+				html.insertAdjacentText("beforeend",param.name+" (pick ->)")
+				html.appendChild(input);
+				let recent=viewer.recentTiles?viewer.recentTiles:[];
+				html.appendChild(list([...recent,...mapData.tiles.map(x=>x.id)],id,false,recent.length));
+				let recent2=viewer.recentGraphs?viewer.recentGraphs:[];
+				//console.log(recent);
+				html.appendChild(list([...recent2,...mapData.graphs.map(x=>x.id)],id,true,recent2.length));
+				
 				break;
 			case "int":
-				html.innerHTML += "<input placeholder='integer' type='number' min='-2147483648' max='2147483647'></input>" + param.name + "<br>";
+				input=document.createElement("input");
+				Object.assign(input,{
+					placeholder:'integer',
+					type:'number',
+					min:'-2147483648',
+					max:'2147483647',
+					id:id,
+				});
 				break;
 			case "float":
-				html.innerHTML += "<input placeholder='float' type='text' step='any'></input>" + param.name + "<br>";
+				input=document.createElement("input");
+				Object.assign(input,{
+					placeholder:'float',
+					type:'text',
+					min:'-2147483648',
+					max:'2147483647',
+					id:id,
+					step:'any'
+				});
 				break;
 			case "boolean":
-				html.innerHTML += "<input type='checkbox'></input>" + param.name + "<br>";
+				input=document.createElement("input");
+				Object.assign(input,{
+					type:'checkbox',
+					id:id
+				});
 				break;
 			case "UTF8": 
-				html.innerHTML += "<input placeholder='text' type='text'></input>" + param.name + "<br>";
+				html.innerHTML += "<input placeholder='text' type='text' id='"+id+"'></input>" + param.name + "<br>";
+				
+				Object.assign(input,{
+					placeholder:'text',
+					type:'text',
+					id:id
+				});
 				break;
 
 		}
+		if(param.type!="short"){
+			html.appendChild(input);
+			html.insertAdjacentText("beforeend",param.name);
+		}
+		html.appendChild(document.createElement("br"));
 		//onclick use [...html]
 	}
-	
+	for(let i in prev){
+		[...html][i].value=prev[i];
+	}
 	return html.children.length?html:document.createTextNode("(none)");
 }
 function theParams(html){
+	if(!html || !(html instanceof HTMLFormElement))return [];
 	let script=html.dataset.script;
 	let params=[]
 	for(var i in [...html]){
@@ -88,5 +172,4 @@ function theParams(html){
 	}
 	return params;
 }
-toParams(165);
 //other type is boolean(just use x*1 or something

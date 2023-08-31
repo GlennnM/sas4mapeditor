@@ -1,13 +1,5 @@
-
-let viewer;
+var viewer;
 var SCALED=false;
-function near(pos1,pos2){
-	return Math.sqrt((pos1.x-pos2.x)**2 + (pos1.y-pos2.y)**2)<10;
-}
-const randomColor=(seed)=>
-	"#"+(Object(seed*(9999999)%128)).toString(16).padStart(2,0)
-	+(64+Object(seed*(999999)%192)).toString(16).padStart(2,0)
-		+(Object(seed*(99999)%256)).toString(16).padStart(2,0);
 class Viewer{
 	static WIDTH = 1280;
 	static HEIGHT = 720;
@@ -72,7 +64,8 @@ class Viewer{
 		},1000/30);
 		this.tab="ENTITY";//ENTITY, NODE, EDGE, TILE, OTHER
 		this.selected={};
-		
+		this.recentGraphs=[];
+		this.recentTiles=[];
 		let input=document.getElementById("select_entity_input");
 		let search=document.getElementById("select_entity_data");
 		search.innerHTML='';
@@ -167,9 +160,6 @@ class Viewer{
 			this.doInteract();
 		}
 	
-		if (this.keys[8] || this.keys[46]) {
-			this.clearAllTabs();
-		}
 	}
 	canvasPos(e){
 		const rect = canvas.getBoundingClientRect();
@@ -347,15 +337,19 @@ class Viewer{
 		this.keys[e.keyCode] = true;
 	}
 	keyup(e) {
+		if (this.keys[8] || this.keys[46]) {
+			this.clearAllTabs();
+		}
 		this.keys[e.keyCode] = false;
+		
 	}
 	clearAllTabs(){
 		let tmp=this.tab;
 		for(var x of ["ENTITY","NODE","COLLISION","AI","TILE","OTHER","AVATAR","ENEMY"]){
-			this.tab=x;
-			this.clearAll();
+			viewer.tab=x;
+			viewer.clearAll();
 		}	
-		this.tab=tmp;	
+		viewer.tab=tmp;	
 	}
 	clearAll(){
 		let t=this.getTarget();
@@ -404,6 +398,7 @@ class Viewer{
 				for(var g of mapData.graphs){
 					g.nodes=g.nodes.filter(a=>a!=x);
 					if(g.nodes.length==0){
+						this.recentGraph=this.recentGraph.filter(x=>x!=g.id);
 						mapData.graphs=mapData.graphs.filter(x=>x.id!=g.id);
 						mapData.physicsEdgeGraphs=mapData.physicsEdgeGraphs.filter(x=>x!=g.id);
 						mapData.aiPathingGraphs=mapData.aiPathingGraphs.filter(x=>x!=g.id);
@@ -423,7 +418,13 @@ class Viewer{
 			target="edges";
 			break;
 			
-			case "TILE":target="tiles";break;
+			case "TILE":
+				if(this.recentTile)
+					for(var x of e){
+						this.recentTile=this.recentTile.filter(a=>a.id!=x.id);
+					}
+				target="tiles";
+				break;
 			case "OTHER":
 				for(var x of e){
 					mapData.extras=mapData.extras.filter(a=>a.x!=x.x || a.y!=x.y || a.text!=x.text);
@@ -448,6 +449,8 @@ class Viewer{
 		viewer.selected=this.selected;
 		viewer.place=this.place;
 		viewer.tab=this.tab;
+		viewer.recentGraphs=this.recentGraphs;
+		viewer.recentTiles=this.recentTiles;
 		viewer.refreshSelection(true);
 	}
 	render(){
@@ -548,10 +551,7 @@ class Viewer{
 					const adjustedStart = this.cameraOffset(edge.start);
 					const adjustedEnd = this.cameraOffset(edge.end);
 					if(adjustedStart && adjustedEnd){
-						ctx.beginPath();
-						ctx.moveTo(adjustedStart.x, adjustedStart.y);
-						ctx.lineTo(adjustedEnd.x, adjustedEnd.y);
-						ctx.stroke();
+						this.line(adjustedStart, adjustedEnd);
 					}
 				});
 			});
@@ -563,10 +563,7 @@ class Viewer{
 				const adjustedStart = this.cameraOffset(edge.start);
 				const adjustedEnd = this.cameraOffset(edge.end);
 				if(adjustedStart && adjustedEnd){
-					ctx.beginPath();
-					ctx.moveTo(adjustedStart.x, adjustedStart.y);
-					ctx.lineTo(adjustedEnd.x, adjustedEnd.y);
-					ctx.stroke();
+					this.line(adjustedStart,adjustedEnd);
 				}
 			});
 		
@@ -580,10 +577,7 @@ class Viewer{
 				const adjustedStart = this.cameraOffset(edge.start);
 				const adjustedEnd = this.cameraOffset(edge.end);
 				if(adjustedStart && adjustedEnd){
-					ctx.beginPath();
-					ctx.moveTo(adjustedStart.x, adjustedStart.y);
-					ctx.lineTo(adjustedEnd.x, adjustedEnd.y);
-					ctx.stroke();
+					this.line(adjustedStart, adjustedEnd);
 				}
 			});
 			ctx.fillStyle='black';
@@ -622,15 +616,18 @@ class Viewer{
 				ctx.ellipse(this.mouse.x,this.mouse.y,10,10,0,0,2*Math.PI);
 				ctx.fill();
 				if(this.place.edgeStart){
-						ctx.beginPath();
-						let adj=this.cameraOffset(this.place.edgeStart);
-						ctx.moveTo(adj.x,adj.y);
-						ctx.lineTo(this.mouse.x,this.mouse.y);
-						ctx.stroke();
+					let adj=this.cameraOffset(this.place.edgeStart);
+					this.line(adj,this.mouse);
 				}
 					break;
 			}
 		}
+	}
+	line(p1,p2){
+		this.ctx.beginPath();
+		this.ctx.moveTo(p1.x,p1.y);
+		this.ctx.lineTo(p2.x,p2.y);
+		this.ctx.stroke();
 	}
 	fixLengths(){
 		mapData.tileCount=mapData.tiles.length;
@@ -652,6 +649,10 @@ class Viewer{
 		document.getElementById("overlay").hidden=null;
 		document.getElementById("select_entity").hidden=null;
 		
+		let menu=document.getElementById("select_entity");
+		menu.querySelector("#parameterHint").children[0].innerText="N/A";
+		let div=menu.querySelector("#parameterDiv");
+		div.innerHTML='';
 	}
 	addEntityUpdate(){
 		let id=document.getElementById("select_entity_input").value
@@ -698,6 +699,7 @@ class Viewer{
 					id=this.newGraphId();
 					mapData.graphs.push({id:id,nodes:[],nodeCount:0});
 					mapData.physicsEdgeGraphs.push(id);
+					this.addRecentGraph(id);
 					recreate();
 				}
 				this.place={
@@ -715,6 +717,16 @@ class Viewer{
 				//3. set placement-->add that first(nodes are circles, hide others, circle on mouse)
 		}
 		this.hidePopups();
+	}
+	addRecentGraph(id){
+		this.recentGraphs.push(id);
+		if(this.recentGraphs.length>4)
+			this.recentGraphs=this.recentGraphs.slice(1);
+	}
+	addRecentTile(id){
+		this.recentTiles.push(id);
+		if(this.recentTiles.length>4)
+			this.recentTiles=this.recentTiles.slice(1);
 	}
 	hidePopups(){
 		document.getElementById("overlay").hidden=1;
@@ -755,6 +767,7 @@ class Viewer{
 		if(id==-1){
 			id=this.newGraphId();
 			mapData.graphs.push({id:id,nodes:[],nodeCount:0});
+			this.addRecentGraph(id);
 			if(!this.other)mapData.aiPathingGraphs.push(id);
 			this.place={
 				graphId:id
@@ -794,6 +807,7 @@ class Viewer{
 				y:0
 			};
 			mapData.graphs.push({id:id,nodeCount:0,nodes:[]});
+			this.addRecentGraph(id);
 			mapData.entities.push(wall);
 		}
 		id=((wall.parameters[0]&0xff)<<8)|(wall.parameters[1]&0xff);
@@ -835,7 +849,8 @@ class Viewer{
 					return `<summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id}(${script.name})(${e.x}, ${e.y})</u></summary>
 							<pre>${JSON.stringify(e,null,'\t')}</pre>${JSON.stringify(script)}`;
 			}
-			return `<summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id} - (${e.x}, ${e.y}) </u></summary>`;
+			let graphDesc=e.graphId?" - Graph #"+e.graphId:"";
+			return `<summary style='cursor:pointer'><u>${this.tab.toLowerCase()} ${e.id} - (${e.x}, ${e.y}) ${graphDesc}</u></summary>`;
 			
 			//return "<pre><code>"+JSON.stringify(this.selected.entities,null,'\t')+"</code></pre>";
 		})();
@@ -846,47 +861,3 @@ class Viewer{
 		return thing;
 	}
 }
-const fe=document.getElementById("fileElem");
-fe.onchange=()=>{
-	try{
-		file=fe.files[0];
-		file.text().then(f=>{
-			if(file.name.endsWith('.js')){
-				const end=f.lastIndexOf(';');
-				mapData=JSON.parse(f.substring(f.indexOf('=')+1,(end<0?f.length:end)));
-			}else {
-				mapData=JSON.parse(f);
-				if(mapData instanceof Array)
-					mapData=mapData[0];
-			}
-			viewer.destroy();
-			viewer = new Viewer(document.getElementById('canvas'));
-		});
-	}catch(e){
-		alert(e);
-	}finally{
-		//document.getElementById('fileElem').files=[];
-	}
-}
-(function(console) {
-    console.save = function(data, filename) {
-        if (!data) {
-            console.error('Console.save: No data');
-            return;
-        }
-        if (!filename) {
-            filename = 'map.json';
-        }
-        var blob = new Blob([data], {encoding:"UTF-8",type:"text/plain;charset=UTF-8"}),
-            e    = document.createEvent('MouseEvents'),
-            a    = document.createElement('a');
-        a.download = filename;
-        a.href = window.URL.createObjectURL(blob);
-        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':');
-        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-        a.dispatchEvent(e);
-    }
-})(console);
-window.addEventListener('load',()=>{
-	viewer = new Viewer(document.getElementById('canvas'));
-});

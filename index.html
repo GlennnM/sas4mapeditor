@@ -4,12 +4,14 @@
 		<title>
 			NKIA's SAS4 Map Viewer
 		</title>
+		<script>var viewer;</script>
 		<script src="assets_csv.js"></script>
 		<script src="scripts.js"></script>
 		<script src="extra/bounds.js"></script>
 		<script src="ice.js"></script>
 		<script src="datatypes.js"></script>
 		<script src="main.js"></script>
+		<script src="save.js"></script>
 		<style>
 			#overlay{
 			    position   : absolute;
@@ -87,14 +89,15 @@
 				<datalist style='display:none' id="select_entity_data"></datalist>
 				
 			</form>
-			<div style='display:inline;font-size:20' id="parameterHint">Select parameters for script <a>N/A</a>...</div>
-			<div style='font-size:20' id="parameterDiv"></div>
+			<div style='display:inline;font-size:20;' id="parameterHint">Select parameters for script <a>N/A</a>...</div>
+			<div style='background:lightgrey;overflow-y:scroll;height:50%;font-size:20' id="parameterDiv"></div>
 			<a href='#' onclick="viewer.addEntitySave()" style="bottom:0">[Confirm]</a>	
 			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
 		
 		</div>
 		<canvas id="canvas" tabindex="-1"></canvas>
-		<h1 style='display:inline;position:absolute;top:0px'>
+		<div style='display:inline;position:absolute;top:0px'>
+		<h1>
 		<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
 		<a href="#" onclick="document.getElementById('fileElem').click();">[Upload]</a>
 		<a href="#" 
@@ -146,7 +149,8 @@
 		<a href="#" onclick="viewer.tab='OTHER';">[Other - <b id="otherCount">0</b>]</a>
 		<br>
 		Selected entities:</h1>
-		<div style='display:inline;position:absolute;top:320px' id='entities'></div>
+		<div  id='entities'></div>
+		</div>
 		<!--pre style='display:inline;position:absolute;top:50px'><code id='entities'></pre></code-->
 
 		
