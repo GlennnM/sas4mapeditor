@@ -233,6 +233,15 @@ class Viewer{
 			&&!drag
 			){
 				switch(this.place.tab){
+					case "ENTITY":
+						let ent=this.place.entity;
+						let adj2=this.mapOffset(this.mouse);
+						ent.x=Math.round(adj2.x);
+						ent.y=Math.round(adj2.y);
+						mapData.entities.push(ent);
+						this.place=null;
+						this.recreate();
+						break;
 					default:
 						
 						let graph=mapData.graphs
@@ -610,15 +619,19 @@ class Viewer{
 		}else if(this.place&& this.mouse){
 			
 			switch(this.place.tab){
+				case "ENTITY":
+					ctx.fillStyle="green";
+					ctx.fillRect(this.mouse.x,this.mouse.y,20,20);
+					break;
 				default:
-				ctx.fillStyle=randomColor(this.place.graphId);
-				ctx.beginPath();
-				ctx.ellipse(this.mouse.x,this.mouse.y,10,10,0,0,2*Math.PI);
-				ctx.fill();
-				if(this.place.edgeStart){
-					let adj=this.cameraOffset(this.place.edgeStart);
-					this.line(adj,this.mouse);
-				}
+					ctx.fillStyle=randomColor(this.place.graphId);
+					ctx.beginPath();
+					ctx.ellipse(this.mouse.x,this.mouse.y,10,10,0,0,2*Math.PI);
+					ctx.fill();
+					if(this.place.edgeStart){
+						let adj=this.cameraOffset(this.place.edgeStart);
+						this.line(adj,this.mouse);
+					}
 					break;
 			}
 		}
@@ -659,10 +672,15 @@ class Viewer{
 			.split(" ")
 			.map(Number)
 			.filter(x=>!isNaN(x))[0];
-		if(id===undefined)return;
 		let menu=document.getElementById("select_entity");
-		menu.querySelector("#parameterHint").children[0].innerText=scripts[id].name;
+		let paramNameContainer=menu.querySelector("#parameterHint").children[0];
 		let div=menu.querySelector("#parameterDiv");
+		if(id===undefined || !scripts[id]){
+			paramNameContainer.innerText="N/A";
+			div.innerHTML='';
+			return;
+		}
+		paramNameContainer.innerText=scripts[id].name;
 		div.innerHTML='';
 		div.appendChild(paramsHTML(id));
 	}
@@ -671,8 +689,18 @@ class Viewer{
 			.split(" ")
 			.map(Number)
 			.filter(x=>!isNaN(x))[0];
-		if(id===undefined)return;
-		alert(id);
+		if(id===undefined || !scripts[id])return;
+		let params=theParams(document.getElementById("parameterDiv").children[0]);
+		
+		this.place={
+			tab:"ENTITY",
+			entity:{
+				id:this.newEntityId(),
+				script:id,
+				parameterLength:params.length,
+				parameters:params
+			}
+		}
 		this.hidePopups();
 	}
 	addTile(){

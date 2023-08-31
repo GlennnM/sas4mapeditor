@@ -132,8 +132,7 @@ function paramsHTML(script,prev=[]){
 				});
 				break;
 			case "UTF8": 
-				html.innerHTML += "<input placeholder='text' type='text' id='"+id+"'></input>" + param.name + "<br>";
-				
+				input=document.createElement("input");
 				Object.assign(input,{
 					placeholder:'text',
 					type:'text',
@@ -142,9 +141,12 @@ function paramsHTML(script,prev=[]){
 				break;
 
 		}
-		if(param.type!="short"){
+		if(param.type!="short" ){
 			html.appendChild(input);
-			html.insertAdjacentText("beforeend",param.name);
+			let label=document.createElement("label");
+			label.htmlFor=id;
+			label.innerText=param.name;
+			html.appendChild(label);
 		}
 		html.appendChild(document.createElement("br"));
 		//onclick use [...html]
@@ -158,7 +160,7 @@ function theParams(html){
 	if(!html || !(html instanceof HTMLFormElement))return [];
 	let script=html.dataset.script;
 	let params=[]
-	for(var i in [...html]){
+	for(var i in [...html.querySelectorAll("input")]){
 		let param=scripts[script].params[i];
 		switch(param.type){
 			case "boolean":
