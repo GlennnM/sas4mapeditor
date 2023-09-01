@@ -156,19 +156,31 @@ function paramsHTML(script,prev=[]){
 	}
 	return html.children.length?html:document.createTextNode("(none)");
 }
+function assetImg(id){
+	let i=document.getElementById(assets[id]);
+	if(!i){
+		var img=new Image();
+		img.src="img/"+assets[id]+".png";
+		i=document.body.appendChild(img);
+		img.id=assets[id];
+		i.hidden=true;
+	}
+	return i;
+}
 function theParams(html){
 	if(!html || !(html instanceof HTMLFormElement))return [];
 	let script=html.dataset.script;
-	let params=[]
-	for(var i in [...html.querySelectorAll("input")]){
+	let params=[];
+	let target=[...html.querySelectorAll("input")];
+	for(var i in target){
 		let param=scripts[script].params[i];
 		switch(param.type){
 			case "boolean":
-				params.push(1*(html[i].checked));
+				params.push((target[i].checked)&1);
 				break;
 			default:
 				let func=window[""+param.type+"ToArray"];
-				params.push(...func(html[i].value));
+				params.push(...func(target[i].value));
 				break;
 		}
 	}

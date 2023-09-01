@@ -232,12 +232,34 @@ class Viewer{
 			&& document.activeElement===this.canvas
 			&&!drag
 			){
+				let adj=this.mapOffset(this.mouse);
 				switch(this.place.tab){
+					case "TILE":
+						let tile={
+							"id": this.newTileId(),
+							"image": this.place.tile,
+							"z": 0,
+							"isInBottomLayer": false,
+							"isCollapsed": false,
+							"x": adj.x,
+							"y": adj.y,
+							"rotation": 0,
+							"scaleX": 1,
+							"scaleY": 1,
+							"b1": false,
+							"b2": false,
+							"s1": 0,
+							"s2": 0
+						};
+						mapData.tiles.push(tile);
+						this.place=null;
+						this.addRecentTile(tile);
+						this.recreate();
+						break;
 					case "ENTITY":
 						let ent=this.place.entity;
-						let adj2=this.mapOffset(this.mouse);
-						ent.x=Math.round(adj2.x);
-						ent.y=Math.round(adj2.y);
+						ent.x=Math.round(adj.x);
+						ent.y=Math.round(adj.y);
 						mapData.entities.push(ent);
 						this.place=null;
 						this.recreate();
@@ -268,7 +290,6 @@ class Viewer{
 								return;
 							}
 						}
-						let adj=this.mapOffset(this.mouse);
 						let node={
 							id:this.newNodeId(),
 							x:Math.round(adj.x),
@@ -373,6 +394,7 @@ class Viewer{
 		this.editTextDiscard();
 		this.recreate();
 	}
+	
 	editTextDiscard(){
 		this.editingThing=null;
 		this.editingIndex=-1;
@@ -407,7 +429,7 @@ class Viewer{
 				for(var g of mapData.graphs){
 					g.nodes=g.nodes.filter(a=>a!=x);
 					if(g.nodes.length==0){
-						this.recentGraph=this.recentGraph.filter(x=>x!=g.id);
+						this.recentGraphs=this.recentGraphs.filter(x=>x!=g.id);
 						mapData.graphs=mapData.graphs.filter(x=>x.id!=g.id);
 						mapData.physicsEdgeGraphs=mapData.physicsEdgeGraphs.filter(x=>x!=g.id);
 						mapData.aiPathingGraphs=mapData.aiPathingGraphs.filter(x=>x!=g.id);
@@ -428,9 +450,9 @@ class Viewer{
 			break;
 			
 			case "TILE":
-				if(this.recentTile)
+				if(this.recentTiles)
 					for(var x of e){
-						this.recentTile=this.recentTile.filter(a=>a.id!=x.id);
+						this.recentTiles=this.recentTiles.filter(a=>a.id!=x.id);
 					}
 				target="tiles";
 				break;
@@ -482,33 +504,19 @@ class Viewer{
 				if(adjusted){
 					if(document.getElementById("showLabel").checked)
 						ctx.fillText("tile "+node.id+"["+assets[node.image]+"]", adjusted.x, adjusted.y+(off?off00:0));
-					var i=document.getElementById(assets[node.image]);
-					if(!i){
-						var img=new Image();
-						img.src="img/"+assets[node.image]+".png";
-						var	i=document.body.appendChild(img);
-						img.id=assets[node.image];
-						i.hidden=true;
-					}
+					let i=assetImg(node.image);
 					node.width=i.width;
 					node.height=i.height;
 					ctx.save();
 					ctx.translate(adjusted.x,adjusted.y);
-						ctx.rotate(node.rotation*Math.PI/180);
+					ctx.rotate(node.rotation*Math.PI/180);
 					//Sprites can have pivot points other than top left, these are described by bounds in swf but don't get saved on export
 					let bound=bounds[assets[node.image]];
 					ctx.scale(this.camera.zoom,this.camera.zoom);
 					ctx.scale(node.scaleX,node.scaleY);
 					if(bound)
 						ctx.translate(bound[0],bound[1]);
-					
-					//ctx.scale(node.scaleX,node.scaleY);
-					//if(node.rotation!=0){
-					//ctx.restore();
-					//	return;
-					//	ctx.translate(node.width*this.camera.zoom/2,node.height*this.camera.zoom/2);
-				//		ctx.drawImage(i,-node.width*this.camera.zoom/2,-node.height*this.camera.zoom/2);
-				//	}else
+						
 					if(i.width)
 						ctx.drawImage(i,0,0);
 					ctx.restore();
@@ -619,6 +627,20 @@ class Viewer{
 		}else if(this.place&& this.mouse){
 			
 			switch(this.place.tab){
+				case "TILE":
+					let i=this.place.image;
+					ctx.save();
+					ctx.translate(this.mouse.x,this.mouse.y);
+					//Sprites can have pivot points other than top left, these are described by bounds in swf but don't get saved on export
+					let bound=bounds[assets[this.place.tile]];
+					ctx.scale(this.camera.zoom,this.camera.zoom);
+					if(bound)
+						ctx.translate(bound[0],bound[1]);
+						
+					if(i.width)
+						ctx.drawImage(i,0,0);
+					ctx.restore();
+					break;
 				case "ENTITY":
 					ctx.fillStyle="green";
 					ctx.fillRect(this.mouse.x,this.mouse.y,20,20);
@@ -704,7 +726,59 @@ class Viewer{
 		this.hidePopups();
 	}
 	addTile(){
-		
+		document.getElementById("overlay").hidden=null;
+		document.getElementById("select_tile").hidden=null;
+		let input=document.getElementById("select_tile_input");
+		let ctr=document.getElementById("select_tile_ctr");
+		if(ctr.children.length<Object.keys(assets).length){
+			ctr.innerText="loading..."
+			setTimeout(()=>{
+				ctr.innerText='';
+				for(let [id,tile] of Object.entries(assets)){
+					let i=assetImg(id).cloneNode(true);
+					i.hidden=null;
+					i.style='margin-left:auto;margin-right:auto;max-width:50%;max-height:60%';
+					//let bound=bounds[tile];
+					let div=document.createElement("div");
+					
+					div.appendChild(i);	
+					div.innerHTML+="<br>"+tile;
+					div.classList=["tile_images"];
+					div.onclick=()=>{
+						input.value=tile;
+						viewer.addTileSave();
+					};
+					ctr.appendChild(div);
+				}
+			},1);
+		}
+	}
+	
+	addTileUpdate(){
+		let input=document.getElementById("select_tile_input");
+		let text=input.value;
+		for(let e of document.getElementById("select_tile_ctr").children){
+			if(!e.innerText.toLowerCase().includes(text.toLowerCase())){
+				e.style.display='none';
+			}else 
+				e.style.display='inline-block';
+		}
+	}
+	addTileSave(){
+		let input=document.getElementById("select_tile_input");
+		let text=input.value;
+		let id=Object.entries(assets).find(x=>x[1]==text)[0];
+		if(!id)return;
+		this.place={
+			tab:"TILE",
+			tile:id,
+			image:assetImg(id).cloneNode(true)
+		};
+		this.addTileDiscard();
+	}
+	addTileDiscard(){
+		document.getElementById("overlay").hidden=1;
+		document.getElementById("select_tile").hidden=1;
 	}
 	addPhysics(){
 		
@@ -759,9 +833,6 @@ class Viewer{
 	hidePopups(){
 		document.getElementById("overlay").hidden=1;
 		[...document.getElementsByClassName("popup")].forEach(x=>x.hidden=1);
-	}
-	addOther(){
-		
 	}
 	addAI(other=false){
 		let sg=document.getElementById("select_graph");
@@ -849,6 +920,9 @@ class Viewer{
 	}
 	newNodeId(){
 		return Math.max(...mapData.nodes.map(x=>x.id))+1;
+	}
+	newTileId(){
+		return Math.max(...mapData.tiles.map(x=>x.id))+1;
 	}
 	wrapEntity(e){
 		let e_=e;

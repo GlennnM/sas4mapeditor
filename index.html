@@ -2,7 +2,7 @@
 	<head>
 		<input type="file" id="fileElem"  accept="text/*" style="display:none" onchange=""/>
 		<title>
-			NKIA's SAS4 Map Viewer
+			SAS4 Map Editor
 		</title>
 		<script>var viewer;</script>
 		<script src="assets_csv.js"></script>
@@ -35,6 +35,18 @@
 				margin-left:-477px; 
 				margin-top:-240px;
 			    z-index    : 10
+			}
+			
+			.tile_images{
+				word-wrap:break-word;
+				display:inline-block;
+				width:200px;
+				height:100px;
+				border:1px solid black;
+			}
+			.tile_images:hover{
+				background-color:rgb(192, 192, 192);
+				cursor:pointer;
 			}
 		</style>
 	</head>
@@ -92,6 +104,19 @@
 			<div style='display:inline;font-size:20;' id="parameterHint">Select parameters for script <a>N/A</a>...</div>
 			<div style='background:lightgrey;overflow-y:scroll;height:50%;font-size:20' id="parameterDiv"></div>
 			<a href='#' onclick="viewer.addEntitySave()" style="bottom:0">[Confirm]</a>	
+			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
+		
+		</div>
+		<div id="select_tile" class="popup" hidden=1 style="font-size:64">
+			<form onsubmit="viewer.addTileUpdate()" id="select_tile_form" action="#" style='width:100%;height:10%;font-size:32;'>
+				Select a tile...
+				<input type="text" placeholder="entity" style='width:90%;font-size:24' autocomplete="off" id="select_tile_input">
+				<input type="submit" value="Search">
+			</form>
+			<div style='font-size:20;overflow-y:auto;height:70%;display: grid;grid-template-columns: repeat(4, 1fr);gap: 8px;grid-auto-rows: 100px;align-items: start;' id="select_tile_ctr">
+				
+			</div>
+			<a href='#' onclick="viewer.addTileSave()" style="bottom:0">[Confirm]</a>	
 			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
 		
 		</div>
