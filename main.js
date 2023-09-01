@@ -866,7 +866,7 @@ class Viewer{
 		let form=document.getElementById("select_graph_form");
 		//todo: sketch them and maybe show potential entity uses
 		form.innerHTML="Pick graph...<br>";
-		(other?this.otherGraphs.filter(x=>x[0]).map(x=>x[0].graphId):mapData.aiPathingGraphs)
+		(other?mapData.graphs.map(x=>x.id):mapData.aiPathingGraphs)
 			.concat(-1)
 			.forEach(graph=>{
 				var newInput = document.createElement("input");
@@ -877,7 +877,9 @@ class Viewer{
 				var label=document.createElement("label");
 				//if(other)label.style.color=randomColor(graph);
 				label.htmlFor=newInput.id;
-				label.innerHTML=graph<0?"new...<br>":"Graph #"+graph+"<br>";
+				
+				label.innerHTML=graph<0?"new...<br>":
+					describeGraph(graph)+"<br>";
 				form.appendChild(newInput);
 				form.appendChild(label);
 			});

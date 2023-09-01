@@ -49,6 +49,12 @@ function randomColor(seed){
 	+(64+Object(seed*(999999)%192)).toString(16).padStart(2,0)
 		+(Object(seed*(99999)%256)).toString(16).padStart(2,0);
 }
+function describeGraph(id){
+	return (mapData.physicsEdgeGraphs.includes(id)?
+				"physics ":
+				mapData.aiPathingGraphs.includes(id)?
+				"ai ":"")+"graph #"+id;
+}
 //make a selector for id's from a list
 function list(ids, target, graphOrTile=false, numRecents=0){
 	let html=document.createElement("select");
@@ -57,10 +63,7 @@ function list(ids, target, graphOrTile=false, numRecents=0){
 	for(let id of ids){
 		let op= document.createElement("option");
 		let typeId=graphOrTile?
-			(mapData.physicsEdgeGraphs.includes(id)?
-				"physics":
-				mapData.aiPathingGraphs.includes(id)?
-				"ai":""):
+			describeGraph(id):
 			
 			mapData.tiles.find(x=>x.id==id).image
 		;
