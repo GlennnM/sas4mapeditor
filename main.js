@@ -22,7 +22,11 @@ class Viewer{
 			return mapData.graphs
 			.find(graph=>graph.id===graphId)
 			.nodes.map(id=>mapData.nodes.find(node=>id===node.id))
-			.map(x=>{
+			.map(x=>{//add graphId but don't make it appear in json
+				Object.defineProperty(x, "graphId", {
+				    enumerable: false,
+				    writable: true
+				});
 				Object.assign(x,{graphId:graphId});
 				return x;
 			});
@@ -205,7 +209,12 @@ class Viewer{
 	mouseup(e){
 		let drag=(Date.now()-(this.timeDown || Infinity)>250) || 
 		(Date.now()-(this.lastMove || Infinity)<20);
+		//editing something(replace with state TODO)
+		if([...document.querySelectorAll(".popup")].filter(x=>!x.hidden).length){
+			return;
+		}
 		if(e.button){
+			
 			const pos=this.mouse || this.canvasPos(e);
 			if(!this.sel || !pos)return;
 			let near=this.nodeNearby.bind(this,pos);
@@ -232,6 +241,7 @@ class Viewer{
 			&&!drag
 			){
 				let adj=this.mapOffset(this.mouse);
+				
 				switch(this.place.tab){
 					case "TILE":
 						let tile={
@@ -293,10 +303,11 @@ class Viewer{
 							id:this.newNodeId(),
 							x:Math.round(adj.x),
 							y:Math.round(adj.y),
-							graphId:this.place.graphId
+							name:''
 						};
 						mapData.nodes.push(node);
 						graph.nodes.push(node.id);
+						graph.nodeCount++;
 						if(this.place.edgeStart){
 							let edge={
 								a:this.place.edgeStart.id,
@@ -386,18 +397,18 @@ class Viewer{
 	}
 	editTextSave(){
 		Object.assign(
-			this.getTarget()[this.editingIndex],
+			viewer.getTarget()[viewer.editingIndex],
 			JSON.parse(document.getElementById("editTextArea").value)
 		);
 		
-		this.editTextDiscard();
-		this.recreate();
+		viewer.editTextDiscard();
+		viewer.recreate();
 	}
 	
 	editTextDiscard(){
-		this.editingThing=null;
-		this.editingIndex=-1;
-		this.hidePopups();
+		viewer.editingThing=null;
+		viewer.editingIndex=-1;
+		viewer.hidePopups();
 	}
 	editThing(e){
 		//todo - clearly didnt link back to mapdata
@@ -427,6 +438,7 @@ class Viewer{
 				mapData.edges=mapData.edges.filter(a=>a.a!=x && a.b!=x);
 				for(var g of mapData.graphs){
 					g.nodes=g.nodes.filter(a=>a!=x);
+					g.nodeCount=g.nodes.length;
 					if(g.nodes.length==0){
 						this.recentGraphs=this.recentGraphs.filter(x=>x!=g.id);
 						mapData.graphs=mapData.graphs.filter(x=>x.id!=g.id);
