@@ -8,7 +8,7 @@ function floatToArray(f)
 }
 function arrayToFloat(f)
 {
-    let i8=(new Uint8Array(f));   
+    let i8=(new Uint8Array(f)).toReversed().buffer;   
     return (new Float32Array(i8))[0];
 }
 function intToArray(f)
@@ -20,7 +20,7 @@ function intToArray(f)
 }
 function arrayToInt(f)
 {
-    let i8=(new Uint8Array(f));   
+    let i8=(new Uint8Array(f)).toReversed().buffer;   
     return (new Int32Array(i8))[0];
 }
 function shortToArray(f)
@@ -29,7 +29,7 @@ function shortToArray(f)
 }
 function arrayToShort(f)
 {
-    return ((f[1]<<8 )|f[0]);
+    return ((f[0]<<8 )|f[1]);
 }
 function UTF8ToArray(f){
 	return [
@@ -39,7 +39,7 @@ function UTF8ToArray(f){
 }
 function arrayToUTF8(f){
 	var len=arrayToShort(f);
-	return String.fromCharCode(...chars.slice(2,len));
+	return String.fromCharCode(...f.slice(2,2+len));
 }
 function near(pos1,pos2){
 	return Math.sqrt((pos1.x-pos2.x)**2 + (pos1.y-pos2.y)**2)<10;
@@ -78,7 +78,38 @@ function list(ids, target, graphOrTile=false, numRecents=0){
 	});
 	return html;
 }
+function dataLength(type){
+	switch(type){
+		case "short":return 2;
+		case "int":return 4;
+		case "float":return 4;
+		case "boolean":return 1;
+		case "UTF8":return 2;
+	}
+}
+function extract(type,bytes){
+	let idx=0;
+	let params=[];
+	for(let param of scripts[type].params){
+		let len=dataLength(param.type);
+		switch(param.type){
+			case "boolean":
+				params.push(!!(bytes[idx]));
+				break;
+			case "UTF8":
+				len+=arrayToShort(bytes.slice(idx,idx+len));
+			default:
+				let func=window["arrayTo"+param.type[0].toUpperCase() + param.type.slice(1)];
+				params.push(func(bytes.slice(idx,idx+len)));
+				break;
+		}
+		idx+=len;
+		console.log(idx);
+	}
+	return params;
+}
 function paramsHTML(script,prev=[]){
+	console.log(script);
 	let html=document.createElement("form");
 	html.action='#';
 	html.dataset.script=script;
@@ -97,8 +128,9 @@ function paramsHTML(script,prev=[]){
 					max:'32767',
 					id:id,
 				});
-				html.insertAdjacentText("beforeend",param.name+" (pick ->)")
 				html.appendChild(input);
+				
+				html.insertAdjacentText("beforeend"," "+param.name+" (pick ->)")
 				let recent=viewer.recentTiles?viewer.recentTiles:[];
 				html.appendChild(list([...recent,...mapData.tiles.map(x=>x.id)],id,false,recent.length));
 				let recent2=viewer.recentGraphs?viewer.recentGraphs:[];
@@ -148,14 +180,18 @@ function paramsHTML(script,prev=[]){
 			html.appendChild(input);
 			let label=document.createElement("label");
 			label.htmlFor=id;
-			label.innerText=param.name;
+			label.innerText=" "+param.name;
 			html.appendChild(label);
 		}
 		html.appendChild(document.createElement("br"));
 		//onclick use [...html]
 	}
+	let inputs=html.querySelectorAll("input");
 	for(let i in prev){
-		[...html][i].value=prev[i];
+		if(prev[i]===true||prev[i]===false){
+			inputs[i].checked=prev[i];
+		}else
+			inputs[i].value=prev[i];
 	}
 	return html.children.length?html:document.createTextNode("(none)");
 }

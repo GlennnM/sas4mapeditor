@@ -205,14 +205,14 @@ class Viewer{
 			.some(adj=>Viewer.btwn(adj.x,this.sel.x,pos.x,30) 
 				&& Viewer.btwn(adj.y,this.sel.y,pos.y,30));
 	}
-	
+	//editing something(replace with state TODO)
+	editing(){
+		return !([...document.querySelectorAll(".popup")].filter(x=>!x.hidden).length);
+	}
 	mouseup(e){
 		let drag=(Date.now()-(this.timeDown || Infinity)>250) || 
 		(Date.now()-(this.lastMove || Infinity)<20);
-		//editing something(replace with state TODO)
-		if([...document.querySelectorAll(".popup")].filter(x=>!x.hidden).length){
-			return;
-		}
+		if(!this.editing())return;
 		if(e.button){
 			
 			const pos=this.mouse || this.canvasPos(e);
@@ -262,7 +262,7 @@ class Viewer{
 						};
 						mapData.tiles.push(tile);
 						this.place=null;
-						this.addRecentTile(tile);
+						this.addRecentTile(tile.id);
 						this.recreate();
 						break;
 					case "ENTITY":
@@ -377,7 +377,7 @@ class Viewer{
 		this.keys[e.keyCode] = true;
 	}
 	keyup(e) {
-		if (this.keys[8] || this.keys[46]) {
+		if ((this.keys[8] || this.keys[46]) && this.editing()) {
 			this.clearAllTabs();
 		}
 		this.keys[e.keyCode] = false;
@@ -420,6 +420,24 @@ class Viewer{
 		document.getElementById("popup").hidden=null;
 		document.getElementById("editTextArea").value=JSON.stringify(json,null,2);
 		
+	}
+	editParams(e){
+		document.getElementById("overlay").hidden=null;
+		let menu=document.getElementById("edit_params");
+		menu.hidden=null;
+		let paramNameContainer=menu.querySelector("#parameterEditHint").children[0];
+		let div=menu.querySelector("#parameterEditDiv");
+		paramNameContainer.innerText=scripts[e.script].name;
+		div.innerHTML='';
+		div.dataset.id=e.id;
+		div.appendChild(paramsHTML(e.script,extract(e.script,e.parameters)));
+	}
+	editParamsSave(){
+		let edit=document.getElementById("parameterEditDiv");
+		let params=theParams(edit.children[0]);
+		mapData.entities.find(x=>x.id==edit.dataset.id).parameters=params;
+		this.hidePopups();
+		this.recreate();
 	}
 	deleteThing(...e){
 		
@@ -516,6 +534,15 @@ class Viewer{
 					if(document.getElementById("showLabel").checked)
 						ctx.fillText("tile "+node.id+"["+assets[node.image]+"]", adjusted.x, adjusted.y+(off?off00:0));
 					let i=assetImg(node.image);
+					//hide fields
+					Object.defineProperty(node, "width", {
+				    	enumerable: false,
+				    	writable: true
+					});
+					Object.defineProperty(node, "height", {
+				    	enumerable: false,
+				    	writable: true
+					});
 					node.width=i.width;
 					node.height=i.height;
 					ctx.save();
@@ -689,6 +716,9 @@ class Viewer{
 		mapData.entityCount=mapData.entities.length;
 		mapData.extraCount=mapData.extras.length;
 		mapData.thingCount=mapData.things.length;
+		for(var x of mapData.entities){
+			x.parameterLength=x.parameters.length;
+		}
 	}
 	addEntity(){
 		document.getElementById("select_entity_input").value="";
@@ -974,6 +1004,7 @@ class Viewer{
 		edit.innerText="[EDIT]";
 		edit.onclick=()=>this.editThing(e_);
 		
+		
 		let thing=document.createElement("details");
 		thing.innerHTML=(()=>{
 			if(!e.x && e.x!=0){
@@ -997,6 +1028,14 @@ class Viewer{
 		if(this.tab!="COLLISION" && this.tab!="AI"){
 			thing.children[0].appendChild(edit);
 		}
+		if(this.tab=="ENTITY"){
+			let para=document.createElement("a");
+			para.href='#';
+			para.innerText="[PARAMS]";
+			para.onclick=()=>this.editParams(e_);
+			thing.children[0].appendChild(para);
+		}
+		
 		thing.children[0].appendChild(del);
 		return thing;
 	}

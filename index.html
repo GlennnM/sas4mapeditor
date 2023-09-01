@@ -116,6 +116,16 @@
 			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
 		
 		</div>
+		
+		<div id="edit_params" class="popup" hidden=1 style="font-size:64">
+				
+			<div style='display:inline;font-size:20;' id="parameterEditHint">Select parameters for script <a>N/A</a>...</div>
+			
+			<div style='background:lightgrey;overflow-y:scroll;height:80%;font-size:20' id="parameterEditDiv"></div>
+			<a href='#' onclick="viewer.editParamsSave()" style="bottom:0">[Confirm]</a>	
+			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
+		
+		</div>
 		<canvas id="canvas" tabindex="-1"></canvas>
 		<div style='display:inline;position:absolute;top:0px'>
 		<h1>
