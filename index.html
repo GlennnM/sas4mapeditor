@@ -94,15 +94,16 @@
 		
 		</div>
 		<div id="select_entity" class="popup" hidden=1 style="font-size:64">
-			<form id="select_entity_form" action="#" style='width:100%;height:20%;font-size:32;overflow-y:scroll'>
-				
-				<label for="select_entity_input">Select an entity...</label>
-				<input oninput="viewer.addEntityUpdate()" type="text" placeholder="entity" style='width:90%;font-size:24' autocomplete="off" list="select_entity_data" id="select_entity_input">
-				<datalist style='display:none' id="select_entity_data"></datalist>
-				
+			<form onsubmit="viewer.addEntityUpdate()" id="select_entity_form" action="#" style='width:100%;height:2%;font-size:32;'>
+				<input type="text" placeholder="Select an entity..." style='width:90%;font-size:24' autocomplete="off" id="select_entity_input">
+				<input type="submit" value="Search">
 			</form>
+			<div style='font-size:20;overflow-y:auto;height:25%;display: grid;grid-template-columns: repeat(4, 1fr);gap: 8px;grid-auto-rows: 100px;align-items: start;' id="select_entity_ctr">
+				
+			</div>
 			<div style='display:inline;font-size:20;' id="parameterHint">Select parameters for script <a>N/A</a>...</div>
-			<div style='background:lightgrey;overflow-y:scroll;height:50%;font-size:20' id="parameterDiv"></div>
+			
+			<div style='background:lightgrey;overflow-y:scroll;height:40%;font-size:20' id="parameterDiv"></div>
 			<a href='#' onclick="viewer.addEntitySave()" style="bottom:0">[Confirm]</a>	
 			<a href='#' onclick="viewer.hidePopups()" style="bottom:0;padding-left:10px">[Discard]</a>
 		
@@ -110,7 +111,7 @@
 		<div id="select_tile" class="popup" hidden=1 style="font-size:64">
 			<form onsubmit="viewer.addTileUpdate()" id="select_tile_form" action="#" style='width:100%;height:10%;font-size:32;'>
 				Select a tile...
-				<input type="text" placeholder="entity" style='width:90%;font-size:24' autocomplete="off" id="select_tile_input">
+				<input type="text" placeholder="tile..." style='width:90%;font-size:24' autocomplete="off" id="select_tile_input">
 				<input type="submit" value="Search">
 			</form>
 			<div style='font-size:20;overflow-y:auto;height:70%;display: grid;grid-template-columns: repeat(4, 1fr);gap: 8px;grid-auto-rows: 100px;align-items: start;' id="select_tile_ctr">

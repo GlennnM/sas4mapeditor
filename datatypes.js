@@ -167,6 +167,7 @@ function assetImg(id){
 	}
 	return i;
 }
+
 function theParams(html){
 	if(!html || !(html instanceof HTMLFormElement))return [];
 	let script=html.dataset.script;

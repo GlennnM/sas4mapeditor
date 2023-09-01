@@ -67,8 +67,7 @@ class Viewer{
 		this.recentGraphs=[];
 		this.recentTiles=[];
 		let input=document.getElementById("select_entity_input");
-		let search=document.getElementById("select_entity_data");
-		search.innerHTML='';
+		input.innerHTML='';
 		for(var id of Object.keys(scripts)){
 			let s=scripts[id];
 			let t=document.createElement("option");
@@ -77,7 +76,7 @@ class Viewer{
 			t.onclick=()=>{
 				
 			}
-			search.appendChild(t);
+			input.appendChild(t);
 		}
 	}
 	
@@ -622,8 +621,8 @@ class Viewer{
 		});
 		if(this.sel && this.mouse){
 			const pos=this.mouse;
-			this.ctx.fillStyle = '#40408020';
-			this.ctx.fillRect(this.sel.x,this.sel.y,pos.x-this.sel.x,pos.y-this.sel.y, canvas.height);
+			ctx.fillStyle = '#40408020';
+			ctx.fillRect(this.sel.x,this.sel.y,pos.x-this.sel.x,pos.y-this.sel.y, canvas.height);
 		}else if(this.place&& this.mouse){
 			
 			switch(this.place.tab){
@@ -682,21 +681,37 @@ class Viewer{
 	addEntity(){
 		document.getElementById("select_entity_input").value="";
 		document.getElementById("overlay").hidden=null;
-		document.getElementById("select_entity").hidden=null;
-		
 		let menu=document.getElementById("select_entity");
+		menu.hidden=null;
+		
+		
+		let input=menu.querySelector("input");
+		let ctr=menu.querySelector("#select_entity_ctr");
+		if(ctr.children.length<Object.keys(scripts).length){
+			ctr.innerText="loading..."
+			setTimeout(()=>{
+				ctr.innerText='';
+				for(let [id,script] of Object.entries(scripts)){
+					let div=this.box(id,id+" - "+script.name,input,false);
+					ctr.appendChild(div);
+				}
+			},1);
+		}
+		
 		menu.querySelector("#parameterHint").children[0].innerText="N/A";
 		let div=menu.querySelector("#parameterDiv");
 		div.innerHTML='';
 	}
 	addEntityUpdate(){
-		let id=document.getElementById("select_entity_input").value
+		let input=document.getElementById("select_entity_input");
+		let id=input.value
 			.split(" ")
 			.map(Number)
 			.filter(x=>!isNaN(x))[0];
 		let menu=document.getElementById("select_entity");
 		let paramNameContainer=menu.querySelector("#parameterHint").children[0];
 		let div=menu.querySelector("#parameterDiv");
+		this.doSearch("select_entity_input","select_entity_ctr");
 		if(id===undefined || !scripts[id]){
 			paramNameContainer.innerText="N/A";
 			div.innerHTML='';
@@ -705,6 +720,7 @@ class Viewer{
 		paramNameContainer.innerText=scripts[id].name;
 		div.innerHTML='';
 		div.appendChild(paramsHTML(id));
+		this.doSearch("select_entity_input","select_entity_ctr");
 	}
 	addEntitySave(){
 		let id=document.getElementById("select_entity_input").value
@@ -725,6 +741,24 @@ class Viewer{
 		}
 		this.hidePopups();
 	}
+	box(id, name, target, image=false){
+		let div=document.createElement("div");
+		if(image){
+			let i=assetImg(id).cloneNode(true);
+			i.hidden=null;
+			i.style='margin-left:auto;margin-right:auto;max-width:50%;max-height:60%';
+			div.appendChild(i);	
+		}
+		div.innerHTML+="<br>"+name;
+		div.classList=["tile_images"];
+		div.onclick=()=>{
+			target.value=name;
+			if(image)
+				viewer.addTileSave()
+			else this.addEntityUpdate();				
+		};
+		return div;
+	}
 	addTile(){
 		document.getElementById("overlay").hidden=null;
 		document.getElementById("select_tile").hidden=null;
@@ -735,19 +769,7 @@ class Viewer{
 			setTimeout(()=>{
 				ctr.innerText='';
 				for(let [id,tile] of Object.entries(assets)){
-					let i=assetImg(id).cloneNode(true);
-					i.hidden=null;
-					i.style='margin-left:auto;margin-right:auto;max-width:50%;max-height:60%';
-					//let bound=bounds[tile];
-					let div=document.createElement("div");
-					
-					div.appendChild(i);	
-					div.innerHTML+="<br>"+tile;
-					div.classList=["tile_images"];
-					div.onclick=()=>{
-						input.value=tile;
-						viewer.addTileSave();
-					};
+					let div=this.box(id,tile,input,true);
 					ctr.appendChild(div);
 				}
 			},1);
@@ -755,9 +777,11 @@ class Viewer{
 	}
 	
 	addTileUpdate(){
-		let input=document.getElementById("select_tile_input");
-		let text=input.value;
-		for(let e of document.getElementById("select_tile_ctr").children){
+		this.doSearch("select_tile_input","select_tile_ctr");
+	}
+	doSearch(input,output){
+		let text=document.getElementById(input).value;
+		for(let e of document.getElementById(output).children){
 			if(!e.innerText.toLowerCase().includes(text.toLowerCase())){
 				e.style.display='none';
 			}else 
