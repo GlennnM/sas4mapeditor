@@ -103,7 +103,9 @@ class Viewer{
 		this.mu=this.mouseup.bind(this);
 		this.md=this.mousedown.bind(this);
 		this.mm=this.mousemove.bind(this);
-		this.c= (e) => { e.preventDefault(); e.stopPropagation(); };
+		this.c= (e) => { 
+			if(!this.keys[16]){e.preventDefault(); e.stopPropagation();}
+		};
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
 		this.canvas.width = Viewer.WIDTH;
@@ -424,7 +426,6 @@ class Viewer{
 			viewer.getTarget()[this.editingIndex],
 			JSON.parse(document.getElementById("editTextArea").value)
 		);
-		
 		this.editTextDiscard();
 		this.recreate();
 	}
