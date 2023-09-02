@@ -129,7 +129,7 @@
 		<canvas id="canvas" tabindex="-1"></canvas>
 		<div style='display:inline;position:absolute;top:0px'>
 		<h1>
-		<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));">[Save]</a>
+		<a href="#" onclick="viewer.fixLengths();console.save(JSON.stringify(mapData,null,'\t'));viewer.recreate();">[Save]</a>
 		<a href="#" onclick="document.getElementById('fileElem').click();">[Upload]</a>
 		<a href="#" 
 		onclick="viewer.camera.x=0;

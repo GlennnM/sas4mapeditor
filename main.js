@@ -1,8 +1,8 @@
 var viewer;
-var SCALED=false;
 class Viewer{
 	static WIDTH = 1280;
 	static HEIGHT = 720;
+	static SCALED = false;//whether coords for extras were converted
 	constructor(canvas){
 		this.initCanvas(canvas);
 		this.camera = {
@@ -53,13 +53,13 @@ class Viewer{
 			}
 		});
 		//dont repeat this
-		if(!SCALED){
+		if(!Viewer.SCALED){
 			mapData.extras.forEach(extra=>{
 					extra.x*=10;
 					extra.y*=10;
 			});
 		}
-		SCALED=true;
+		Viewer.SCALED=true;
 		this.extras = mapData.extras;
 		this.physicsEdges = this.physicsEdgeGraphs.map(toEdges);
 		this.aiEdges = this.aiEdgeGraphs.map(toEdges);
@@ -741,6 +741,11 @@ class Viewer{
 		mapData.thingCount=mapData.things.length;
 		for(var x of mapData.entities){
 			x.parameterLength=x.parameters.length;
+		}
+		for(var x of mapData.extras){
+			x.x/=10;
+			x.y/=10;
+			Viewer.SCALED=false;
 		}
 	}
 	/**Add an entity(opens selector) */

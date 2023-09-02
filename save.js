@@ -13,6 +13,7 @@ fe.onchange=()=>{
 					mapData=mapData[0];
 			}
 			viewer.destroy();
+			Viewer.SCALED=false;
 			viewer = new Viewer(document.getElementById('canvas'));
 		});
 	}catch(e){
