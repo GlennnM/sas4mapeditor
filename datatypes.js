@@ -55,6 +55,18 @@ function describeGraph(id){
 				mapData.aiPathingGraphs.includes(id)?
 				"ai ":"")+"graph #"+id;
 }
+
+function assetImg(id){
+	let i=document.getElementById(assets[id]);
+	if(!i){
+		var img=new Image();
+		img.src="img/"+assets[id]+".png";
+		i=document.body.appendChild(img);
+		img.id=assets[id];
+		i.hidden=true;
+	}
+	return i;
+}
 //make a selector for id's from a list
 function list(ids, target, graphOrTile=false, numRecents=0){
 	let html=document.createElement("select");
@@ -98,6 +110,7 @@ function extract(type,bytes){
 				break;
 			case "UTF8":
 				len+=arrayToShort(bytes.slice(idx,idx+len));
+				// fall through
 			default:
 				let func=window["arrayTo"+param.type[0].toUpperCase() + param.type.slice(1)];
 				params.push(func(bytes.slice(idx,idx+len)));
@@ -115,12 +128,11 @@ function paramsHTML(script,prev=[]){
 	html.dataset.script=script;
 	for(let param of scripts[script].params){
 		let id="param_"+param.id;
-		let input;
+		let input=document.createElement("input");
 		switch(param.type){
 			case "short":
 				//pick a tile or graph
 				//include recently placed
-				input=document.createElement("input");
 				Object.assign(input,{
 					placeholder:'0-32767',
 					type:'number',
@@ -139,7 +151,6 @@ function paramsHTML(script,prev=[]){
 				
 				break;
 			case "int":
-				input=document.createElement("input");
 				Object.assign(input,{
 					placeholder:'integer',
 					type:'number',
@@ -149,7 +160,6 @@ function paramsHTML(script,prev=[]){
 				});
 				break;
 			case "float":
-				input=document.createElement("input");
 				Object.assign(input,{
 					placeholder:'float',
 					type:'text',
@@ -160,21 +170,18 @@ function paramsHTML(script,prev=[]){
 				});
 				break;
 			case "boolean":
-				input=document.createElement("input");
 				Object.assign(input,{
 					type:'checkbox',
 					id:id
 				});
 				break;
 			case "UTF8": 
-				input=document.createElement("input");
 				Object.assign(input,{
 					placeholder:'text',
 					type:'text',
 					id:id
 				});
 				break;
-
 		}
 		if(param.type!="short" ){
 			html.appendChild(input);
@@ -195,18 +202,6 @@ function paramsHTML(script,prev=[]){
 	}
 	return html.children.length?html:document.createTextNode("(none)");
 }
-function assetImg(id){
-	let i=document.getElementById(assets[id]);
-	if(!i){
-		var img=new Image();
-		img.src="img/"+assets[id]+".png";
-		i=document.body.appendChild(img);
-		img.id=assets[id];
-		i.hidden=true;
-	}
-	return i;
-}
-
 function theParams(html){
 	if(!html || !(html instanceof HTMLFormElement))return [];
 	let script=html.dataset.script;

@@ -385,6 +385,11 @@ class Viewer{
 		if ((this.keys[8] || this.keys[46]) && this.editing()) {
 			this.clearAllTabs();
 		}
+		//escape
+		else if(this.keys[27]&&(this.place||!this.editing())){
+			this.place=null;
+			this.hidePopups();
+		}
 		this.keys[e.keyCode] = false;
 		
 	}
@@ -864,11 +869,7 @@ class Viewer{
 			tile:id,
 			image:assetImg(id).cloneNode(true)
 		};
-		this.addTileDiscard();
-	}
-	addTileDiscard(){
-		document.getElementById("overlay").hidden=1;
-		document.getElementById("select_tile").hidden=1;
+		this.hidePopups();
 	}
 	/**Begin adding collision(show selector)*/
 	addPhysics(){
