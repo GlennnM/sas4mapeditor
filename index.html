@@ -89,7 +89,7 @@
 		
 		</div>
 		<div id="select_entity" class="popup" hidden=1 style="font-size:64">
-			<form onsubmit="viewer.addEntityUpdate()" id="select_entity_form" action="#" style='width:100%;height:2%;font-size:32;'>
+			<form onsubmit="viewer.addEntityUpdate();return false;" id="select_entity_form" action="#" style='width:100%;height:2%;font-size:32;'>
 				<input type="text" placeholder="Select an entity..." style='width:90%;font-size:24' id="select_entity_input">
 				<input type="submit" value="Search">
 			</form>
@@ -104,7 +104,7 @@
 		
 		</div>
 		<div id="select_tile" class="popup" hidden=1 style="font-size:64">
-			<form onsubmit="viewer.addTileUpdate()" id="select_tile_form" action="#" style='width:100%;height:10%;font-size:32;'>
+			<form onsubmit="viewer.addTileUpdate();return false;" id="select_tile_form" action="#" style='width:100%;height:10%;font-size:32;'>
 				Select a tile...
 				<input type="text" placeholder="tile..." style='width:90%;font-size:24' autocomplete="off" id="select_tile_input">
 				<input type="submit" value="Search">
