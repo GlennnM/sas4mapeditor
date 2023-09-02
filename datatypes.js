@@ -1,4 +1,4 @@
-
+/**utilities for converting map data */
 function floatToArray(f)
 {
     var buf = new ArrayBuffer(4);

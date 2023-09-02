@@ -31,6 +31,7 @@ class Viewer{
 				return x;
 			});
 		};
+		//graph ids to edges
 		const toEdges=physicsEdgeGraph=>{
 			let edges=this.edges.filter(edge=>physicsEdgeGraph.includes(edge.start) || physicsEdgeGraph.includes(edge.end));
 			edges.forEach(edge=>edge.graph=edge.start.graphId);
@@ -51,6 +52,7 @@ class Viewer{
 				end
 			}
 		});
+		//dont repeat this
 		if(!SCALED){
 			mapData.extras.forEach(extra=>{
 					extra.x*=10;
@@ -182,7 +184,7 @@ class Viewer{
 		return bound1>bound2? (i < bound1-r && i > bound2+r):(i > bound1-r && i < bound2+r);
 	}
 	/**
-     * @param {string} newTab
+	 * updates tab display
      */
 	set tab(newTab){
 		this.tab_=newTab;
@@ -192,6 +194,7 @@ class Viewer{
 	get tab(){
 		return this.tab_;
 	}
+	//used for selecting
 	nodeNearby(pos,node){
 		if(!node)return;
 		const adj=this.cameraOffset(node);
@@ -213,8 +216,8 @@ class Viewer{
 		let drag=(Date.now()-(this.timeDown || Infinity)>250) || 
 		(Date.now()-(this.lastMove || Infinity)<20);
 		if(!this.editing())return;
+		//select stuff
 		if(e.button){
-			
 			const pos=this.mouse || this.canvasPos(e);
 			if(!this.sel || !pos)return;
 			let near=this.nodeNearby.bind(this,pos);
@@ -230,11 +233,11 @@ class Viewer{
 				physicsEdges : this.physicsEdges.flatMap(x=>x).filter(near2)
 			}
 			this.sel=null;
-			
 			//display the selected stuff TODO
 			this.refreshSelection();
 		}
 		else {
+			//finish placing something
 			this.keys[0]=0;
 			if(this.mouse && this.place && !e.movementX && !e.movementY
 			&& document.activeElement===this.canvas
@@ -356,7 +359,7 @@ class Viewer{
 		}
 	}
 	mousemove(e){
-		this.lastMove=Date.now()
+		this.lastMove=Date.now()//used to allow moving camera while placing
 		if(this.keys[0]){
 			this.camera.x-=e.movementX/this.camera.zoom;
 			this.camera.y-=e.movementY/this.camera.zoom;
@@ -369,6 +372,7 @@ class Viewer{
 		}else 
 			this.camera.zoom*=0.9;
 		let sign=(e.deltaY<0)?1:-1;
+		//shift towards mouse
 		this.camera.x+=sign*(this.mouse.x-this.canvas.width/2)/(8*this.camera.zoom);
 		this.camera.y+=sign*(this.mouse.y-this.canvas.height/2)/(8*this.camera.zoom);
 		e.preventDefault();
@@ -377,6 +381,7 @@ class Viewer{
 		this.keys[e.keyCode] = true;
 	}
 	keyup(e) {
+		//delete or backspace
 		if ((this.keys[8] || this.keys[46]) && this.editing()) {
 			this.clearAllTabs();
 		}
@@ -395,21 +400,8 @@ class Viewer{
 		let t=this.getTarget();
 		if(t)this.deleteThing(...t);
 	}
-	editTextSave(){
-		Object.assign(
-			viewer.getTarget()[viewer.editingIndex],
-			JSON.parse(document.getElementById("editTextArea").value)
-		);
-		
-		viewer.editTextDiscard();
-		viewer.recreate();
-	}
 	
-	editTextDiscard(){
-		viewer.editingThing=null;
-		viewer.editingIndex=-1;
-		viewer.hidePopups();
-	}
+	//Edit json for any map object
 	editThing(e){
 		//todo - clearly didnt link back to mapdata
 		this.editingThing=e;
@@ -421,6 +413,23 @@ class Viewer{
 		document.getElementById("editTextArea").value=JSON.stringify(json,null,2);
 		
 	}
+	
+	editTextSave(){
+		Object.assign(
+			viewer.getTarget()[this.editingIndex],
+			JSON.parse(document.getElementById("editTextArea").value)
+		);
+		
+		this.editTextDiscard();
+		this.recreate();
+	}
+	
+	editTextDiscard(){
+		this.editingThing=null;
+		this.editingIndex=-1;
+		this.hidePopups();
+	}
+	//Edit parameters for an entity
 	editParams(e){
 		document.getElementById("overlay").hidden=null;
 		let menu=document.getElementById("edit_params");
@@ -501,6 +510,7 @@ class Viewer{
 		}catch(e){console.dir(e)};
 		this.recreate();
 	}
+	//Create a new viewer with updated map data, discard this one
 	recreate(){
 		
 		this.destroy();
@@ -523,6 +533,7 @@ class Viewer{
 		
 		ctx.fillStyle='black';
 		var off00=0;
+		/**Display tiles, if layer enabled. */
 		mapData.tiles.sort(x=>-x.z).forEach(node=>{
 			var off=(node.x==0&&node.y==0);
 			if(off){
@@ -534,7 +545,7 @@ class Viewer{
 					if(document.getElementById("showLabel").checked)
 						ctx.fillText("tile "+node.id+"["+assets[node.image]+"]", adjusted.x, adjusted.y+(off?off00:0));
 					let i=assetImg(node.image);
-					//hide fields
+					//hidden fields
 					Object.defineProperty(node, "width", {
 				    	enumerable: false,
 				    	writable: true
@@ -562,6 +573,7 @@ class Viewer{
 			}
 		});
 		
+		/**Display entities, if layer enabled. */
 		ctx.fillStyle='green';
 		off00=0;
 		if(document.getElementById("showEntity").checked){
@@ -599,6 +611,7 @@ class Viewer{
 			});
 		}
 		
+		/**Display collision, if layer enabled. */
 		ctx.fillStyle='black';
 		if(document.getElementById("showCollision").checked)
 			this.physicsEdges.forEach((physicsEdges)=>{
@@ -610,6 +623,8 @@ class Viewer{
 					}
 				});
 			});
+			
+		/**Display AI(and misc graphs), if layer enabled. */
 		ctx.fillStyle='red';
 		ctx.strokeStyle='red';
 		ctx.lineWidth = 1;
@@ -638,6 +653,7 @@ class Viewer{
 			ctx.fillStyle='black';
 		ctx.strokeStyle='black';
 		
+		/**Display nodes*/
 		mapData.nodes.forEach(node=>{
 			let off=this.cameraOffset(node);
 			if(this.place && this.place.graphId==node.graphId){
@@ -663,7 +679,7 @@ class Viewer{
 			ctx.fillStyle = '#40408020';
 			ctx.fillRect(this.sel.x,this.sel.y,pos.x-this.sel.x,pos.y-this.sel.y, canvas.height);
 		}else if(this.place&& this.mouse){
-			
+			//Draw the item to be placed
 			switch(this.place.tab){
 				case "TILE":
 					let i=this.place.image;
@@ -702,6 +718,7 @@ class Viewer{
 		this.ctx.lineTo(p2.x,p2.y);
 		this.ctx.stroke();
 	}
+	//Used before saving the map
 	fixLengths(){
 		mapData.tileCount=mapData.tiles.length;
 		mapData.nodeCount=mapData.nodes.length;
@@ -720,6 +737,7 @@ class Viewer{
 			x.parameterLength=x.parameters.length;
 		}
 	}
+	/**Add an entity(opens selector) */
 	addEntity(){
 		document.getElementById("select_entity_input").value="";
 		document.getElementById("overlay").hidden=null;
@@ -744,6 +762,7 @@ class Viewer{
 		let div=menu.querySelector("#parameterDiv");
 		div.innerHTML='';
 	}
+	/**Update the selector*/
 	addEntityUpdate(){
 		let input=document.getElementById("select_entity_input");
 		let id=input.value
@@ -764,6 +783,7 @@ class Viewer{
 		div.appendChild(paramsHTML(id));
 		this.doSearch("select_entity_input","select_entity_ctr");
 	}
+	/**Finish selecting - place*/
 	addEntitySave(){
 		let id=document.getElementById("select_entity_input").value
 			.split(" ")
@@ -783,6 +803,7 @@ class Viewer{
 		}
 		this.hidePopups();
 	}
+	/**Used for grid selectors(entity/tile)*/
 	box(id, name, target, image=false){
 		let div=document.createElement("div");
 		if(image){
@@ -801,6 +822,7 @@ class Viewer{
 		};
 		return div;
 	}
+	/**Begin adding tile(opens selector)*/
 	addTile(){
 		document.getElementById("overlay").hidden=null;
 		document.getElementById("select_tile").hidden=null;
@@ -817,10 +839,11 @@ class Viewer{
 			},1);
 		}
 	}
-	
+	/**Update tile selector*/
 	addTileUpdate(){
 		this.doSearch("select_tile_input","select_tile_ctr");
 	}
+	/**Updates a grid element from a search box*/
 	doSearch(input,output){
 		let text=document.getElementById(input).value;
 		for(let e of document.getElementById(output).children){
@@ -830,6 +853,7 @@ class Viewer{
 				e.style.display='inline-block';
 		}
 	}
+	/**Updates a grid element from a search box*/
 	addTileSave(){
 		let input=document.getElementById("select_tile_input");
 		let text=input.value;
@@ -846,12 +870,14 @@ class Viewer{
 		document.getElementById("overlay").hidden=1;
 		document.getElementById("select_tile").hidden=1;
 	}
+	/**Begin adding collision(show selector)*/
 	addPhysics(){
 		
 		document.getElementById("overlay").hidden=null;
 		document.getElementById("add_collision").hidden=null;
 		//document.getElementById("editTextArea").value=JSON.stringify(json,null,2);
 	}
+	/**Close selector and place*/
 	addPhysicsSave(){
 		let mask=
 			!document.getElementById("collide_projectiles").checked * 16
@@ -880,12 +906,13 @@ class Viewer{
 				this.place={
 					graphId:this.findStaticWalls(mask)
 				}
-				//1. find S
+				//1. find static walls
 				//2. create ifne
 				//3. set placement-->add that first(nodes are circles, hide others, circle on mouse)
 		}
 		this.hidePopups();
 	}
+	/**store recent graphs/tiles for use in param editor*/
 	addRecentGraph(id){
 		this.recentGraphs.push(id);
 		if(this.recentGraphs.length>4)
@@ -900,6 +927,7 @@ class Viewer{
 		document.getElementById("overlay").hidden=1;
 		[...document.getElementsByClassName("popup")].forEach(x=>x.hidden=1);
 	}
+	/**open selector for ai/misc graphs*/
 	addAI(other=false){
 		let sg=document.getElementById("select_graph");
 		document.getElementById("overlay").hidden=null;
@@ -926,6 +954,7 @@ class Viewer{
 				form.appendChild(label);
 			});
 	}
+	/**finish sel. and place*/
 	addAISave(){
 		let res=document.getElementById("select_graph_form")
 			.querySelector('input:checked');
@@ -948,6 +977,7 @@ class Viewer{
 		};
 		this.hidePopups();
 	}
+	/**static walls are an entity with selective collision(mask)*/
 	findStaticWalls(mask){
 		let id;
 		//todo: parameter processing
@@ -992,6 +1022,7 @@ class Viewer{
 	newTileId(){
 		return Math.max(...mapData.tiles.map(x=>x.id))+1;
 	}
+	/**selection display*/
 	wrapEntity(e){
 		let e_=e;
 		let del=document.createElement("a");
