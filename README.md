@@ -1,7 +1,7 @@
 # sas4mapeditor
 Visualizer for parsed SAS4 map data, with flash tile rendering and editing features.
 
-Editing features:
+New editing features:
 
 - visually select and place tiles and entities, draw graphs
 - select collision mask for placing collision graphs
@@ -14,6 +14,8 @@ Editing features:
 TODO:
 
 - free transform (depending on category/element selected)
+- adding enemy spawns/others/avatar spawns
+- tab for misc. edges
 - duplicate/undo/redo
 - jump to entities from graph/tile(and reverse?)
 - custom elements with mod compatibility(minimap and description)
