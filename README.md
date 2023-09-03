@@ -22,4 +22,8 @@ TODO:
 - server integration?("test map")
 - more documentation
 - settings???
-![image](https://user-images.githubusercontent.com/46906537/216474891-110623c1-22bb-4994-835f-0bd4aee89abe.png)
+![canvas](https://github.com/GlennnM/sas4mapeditor/assets/77253453/4ce5fbe9-14ad-4ad2-86c8-11bc7af9293c)
+![image](https://github.com/GlennnM/sas4mapeditor/assets/77253453/0951dc6f-c818-4eea-bddf-c5ea85fa11ea)
+
+
+
