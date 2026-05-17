@@ -278,6 +278,14 @@ class Viewer{
 						this.place=null;
 						this.recreate();
 						break;
+					case "EXTRA":
+						let ext={"text":"hydar"};
+						ext.x=Math.round(adj.x);
+						ext.y=Math.round(adj.y);
+						mapData.extras.push(ext);
+						this.place=null;
+						this.recreate();
+						break;
 					default:
 						
 						let graph=mapData.graphs
@@ -983,6 +991,13 @@ class Viewer{
 			//tab:
 		};
 		this.hidePopups();
+	}
+	/**finish sel. and place*/
+	addExtra(){
+		this.place={
+			tab:"EXTRA"
+			//tab:
+		};
 	}
 	/**static walls are an entity with selective collision(mask)*/
 	findStaticWalls(mask){
