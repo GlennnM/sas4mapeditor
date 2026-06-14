@@ -1033,16 +1033,16 @@ class Viewer{
 		return id;
 	}
 	newGraphId(){
-		return Math.max(...mapData.graphs.map(x=>x.id))+1;
+		return Math.max(...mapData.graphs.map(x=>x.id),0)+1;
 	}
 	newEntityId(){
-		return Math.max(...mapData.entities.map(x=>x.id))+1;
+		return Math.max(...mapData.entities.map(x=>x.id),0)+1;
 	}
 	newNodeId(){
-		return Math.max(...mapData.nodes.map(x=>x.id))+1;
+		return Math.max(...mapData.nodes.map(x=>x.id),0)+1;
 	}
 	newTileId(){
-		return Math.max(...mapData.tiles.map(x=>x.id))+1;
+		return Math.max(...mapData.tiles.map(x=>x.id),0)+1;
 	}
 	/**selection display*/
 	wrapEntity(e){
