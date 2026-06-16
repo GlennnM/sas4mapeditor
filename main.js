@@ -153,22 +153,24 @@ class Viewer{
 				.filter(v=>prop in v)
 				.forEach(f);
 		};
-		//TODO change to arrow keys
+		let modifier=1;
+		if(this.keys["Shift"])
+			modifier = 0.1;
+		else if(this.keys["Control"]){
+			modifier = 9;
+		}//else if(this.keys["Alt"])
+		//	modifier = 100;
 		if (this.keys["ArrowUp"]) {
-			forAllEntries("y",x=>x.y-=10);
-			//this.camera.y -= this.camera.speed/this.camera.zoom;
+			forAllEntries("y",x=>x.y-=10*modifier);
 		}
 		if (this.keys["ArrowDown"]) {
-			forAllEntries("y",x=>x.y-=10);
-			//this.camera.y += this.camera.speed/this.camera.zoom;
+			forAllEntries("y",x=>x.y+=10*modifier);
 		}
 		if (this.keys["ArrowLeft"]) {
-			forAllEntries("y",x=>x.y-=10);
-			//this.camera.x -= this.camera.speed/this.camera.zoom;
+			forAllEntries("y",x=>x.x-=10*modifier);
 		}
 		if (this.keys["ArrowRight"]) {
-			forAllEntries("y",x=>x.y-=10);
-			//this.camera.x += this.camera.speed/this.camera.zoom;
+			forAllEntries("y",x=>x.x+=10*modifier);
 		}
 	
 	}
