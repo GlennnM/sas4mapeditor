@@ -113,7 +113,8 @@ class Viewer{
 		canvas.addEventListener('contextmenu',this.c);
 	}
 	update(){
-		this.handleInput();
+		if(this.allowHoldKeys())
+			this.handleInput();
 	}
 	/*Creates a shifted x and y of things to be drawn based on camera pos. Returns nothing if x and y are off map.*/
 	cameraOffset(obj) {
@@ -154,9 +155,9 @@ class Viewer{
 				.forEach(f);
 		};
 		let modifier=1;
-		if(this.keys["Shift"])
+		if(this.keys["ShiftLeft"])
 			modifier = 0.1;
-		else if(this.keys["Control"]){
+		else if(this.keys["ControlLeft"] || this.keys["AltLeft"]){
 			modifier = 9;
 		}//else if(this.keys["Alt"])
 		//	modifier = 100;
@@ -172,7 +173,40 @@ class Viewer{
 		if (this.keys["ArrowRight"]) {
 			forAllEntries("y",x=>x.x+=10*modifier);
 		}
-	
+		if (this.keys["KeyQ"] ) {
+			forAllEntries("rotation",x=>x.rotation-=10*modifier);
+		}
+		if (this.keys["KeyE"] ) {
+			forAllEntries("rotation",x=>x.rotation+=10*modifier);
+		}
+
+		if (this.keys["KeyZ"] ) {
+			forAllEntries("scaleX",x=>{
+				x.scaleX+=0.1*modifier*Math.abs(x.scaleX);
+				x.scaleY+=0.1*modifier*Math.abs(x.scaleY);
+			});
+		}
+		if (this.keys["KeyX"] ) {
+			forAllEntries("scaleX",x=>{
+				x.scaleX-=0.1*modifier*Math.abs(x.scaleX);
+				x.scaleY-=0.1*modifier*Math.abs(x.scaleY);
+			});
+		}
+
+		if (this.keys["KeyV"] ) {
+			forAllEntries("scaleY",x=>x.scaleY*=-1);
+		}
+		if (this.keys["KeyH"] ) {
+			forAllEntries("scaleX",x=>x.scaleX*=-1);
+		}
+	}
+	allowHoldKeys(){
+		return !(
+			this.keys["ControlLeft"] || 
+			this.keys["AltLeft"] || 
+			this.keys["KeyV"] || 
+			this.keys["KeyH"]
+		);
 	}
 	canvasPos(e){
 		const rect = canvas.getBoundingClientRect();
@@ -394,7 +428,9 @@ class Viewer{
 		e.preventDefault();
 	}
 	keydown(e) {
-		this.keys[e.key] = true;
+		this.keys[e.code] = true;
+		if ((e.altKey && e.code === "KeyE"))
+		   e.preventDefault();
 	}
 	keyup(e) {
 		//delete or backspace
@@ -406,7 +442,12 @@ class Viewer{
 			this.place=null;
 			this.hidePopups();
 		}
-		delete this.keys[e.key];
+		if(!this.allowHoldKeys()){
+			this.handleInput();
+		}
+		if ((e.altKey && this.keys["KeyE"]))
+		   e.preventDefault();
+		delete this.keys[e.code];
 		
 	}
 	clearAllTabs(){
