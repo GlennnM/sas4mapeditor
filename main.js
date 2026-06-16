@@ -179,6 +179,12 @@ class Viewer{
 			forAllEntries("rotation",x=>x.rotation+=10*modifier);
 		}
 
+		if (this.keys["Minus"] ) {
+			forAllEntries("z",z=>z.z-=1*modifier);
+		}
+		if (this.keys["Equal"] ) {
+			forAllEntries("z",z=>z.z+=1*modifier);
+		}
 		if (this.keys["KeyZ"] ) {
 			forAllEntries("scaleX",x=>{
 				x.scaleX+=0.1*modifier*Math.abs(x.scaleX);
@@ -198,6 +204,8 @@ class Viewer{
 		if (this.keys["KeyH"] ) {
 			forAllEntries("scaleX",x=>x.scaleX*=-1);
 		}
+
+		this.refreshSelection(true);
 	}
 	allowHoldKeys(){
 		return !(
