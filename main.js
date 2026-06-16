@@ -11,13 +11,7 @@ class Viewer{
 			zoom:0.5,
 			speed:16
 		}
-		this.keys = [];
-		this.settings = {
-			UP_KEY:87,
-			DOWN_KEY:83,
-			LEFT_KEY:65,
-			RIGHT_KEY:68
-		}
+		this.keys = {};
 		const toGraphs=graphId=>{
 			return mapData.graphs
 			.find(graph=>graph.id===graphId)
@@ -104,7 +98,7 @@ class Viewer{
 		this.md=this.mousedown.bind(this);
 		this.mm=this.mousemove.bind(this);
 		this.c= (e) => { 
-			if(!this.keys[16]){e.preventDefault(); e.stopPropagation();}
+			if(!this.keys["Shift"]){e.preventDefault(); e.stopPropagation();}
 		};
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
@@ -151,20 +145,30 @@ class Viewer{
 		};
 	}
 	handleInput() {
-		if (this.keys[this.settings.UP_KEY]) {
-			this.camera.y -= this.camera.speed/this.camera.zoom;
+		//TODO: what is dispEntities???
+		let forAllEntries = (prop,f)=>{
+			Object.keys(this.selected)
+				//.filter(k,v=>k!="dispEntities")
+				.flatMap(k=>this.selected[k])
+				.filter(v=>prop in v)
+				.forEach(f);
+		};
+		//TODO change to arrow keys
+		if (this.keys["ArrowUp"]) {
+			forAllEntries("y",x=>x.y-=10);
+			//this.camera.y -= this.camera.speed/this.camera.zoom;
 		}
-		if (this.keys[this.settings.DOWN_KEY]) {
-			this.camera.y += this.camera.speed/this.camera.zoom;
+		if (this.keys["ArrowDown"]) {
+			forAllEntries("y",x=>x.y-=10);
+			//this.camera.y += this.camera.speed/this.camera.zoom;
 		}
-		if (this.keys[this.settings.LEFT_KEY]) {
-			this.camera.x -= this.camera.speed/this.camera.zoom;
+		if (this.keys["ArrowLeft"]) {
+			forAllEntries("y",x=>x.y-=10);
+			//this.camera.x -= this.camera.speed/this.camera.zoom;
 		}
-		if (this.keys[this.settings.RIGHT_KEY]) {
-			this.camera.x += this.camera.speed/this.camera.zoom;
-		}
-		if (this.keys[this.settings.INTERACT_KEY]) {
-			this.doInteract();
+		if (this.keys["ArrowRight"]) {
+			forAllEntries("y",x=>x.y-=10);
+			//this.camera.x += this.camera.speed/this.camera.zoom;
 		}
 	
 	}
@@ -388,19 +392,19 @@ class Viewer{
 		e.preventDefault();
 	}
 	keydown(e) {
-		this.keys[e.keyCode] = true;
+		this.keys[e.key] = true;
 	}
 	keyup(e) {
 		//delete or backspace
-		if ((this.keys[8] || this.keys[46]) && this.editing()) {
+		if ((this.keys["Delete"] || this.keys["Backspace"]) && this.editing()) {
 			this.clearAllTabs();
 		}
 		//escape
-		else if(this.keys[27]&&(this.place||!this.editing())){
+		else if(this.keys["Escape"]&&(this.place||!this.editing())){
 			this.place=null;
 			this.hidePopups();
 		}
-		this.keys[e.keyCode] = false;
+		delete this.keys[e.key];
 		
 	}
 	clearAllTabs(){
