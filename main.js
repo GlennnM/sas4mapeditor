@@ -146,10 +146,9 @@ class Viewer{
 		};
 	}
 	handleInput() {
-		//TODO: what is dispEntities???
 		let forAllEntries = (prop,f)=>{
 			Object.keys(this.selected)
-				//.filter(k,v=>k!="dispEntities")
+				.filter(k=>k!="dispEntities")
 				.flatMap(k=>this.selected[k])
 				.filter(v=>prop in v)
 				.forEach(f);
